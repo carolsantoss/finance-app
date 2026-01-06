@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         Title="FinanceApp"
-        Height="650"
+        Height="704"
         Width="1100"
         WindowStartupLocation="CenterScreen"
         Background="#1B1B1B">
@@ -154,7 +154,7 @@
                         <TextBlock Text="Usuário logado:"
                                    Foreground="#888888"
                                    FontSize="11"/>
-                        <TextBlock Text="{Binding UsuarioNome, FallbackValue='Admin'}"
+                        <TextBlock Text="{Binding NomeUsuario, FallbackValue='Admin'}"
                                    Foreground="White"
                                    FontSize="13"
                                    FontWeight="SemiBold"

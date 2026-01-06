@@ -1,15 +1,22 @@
 ﻿using FinanceApp.Data;
 using FinanceApp.Helpers;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace FinanceApp.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
+        #region Campos Privados
+
         private decimal _entradas;
         private decimal _saidas;
+        private string _nomeUsuario = "Usuário";
+
+        #endregion
+
+        #region Propriedades Públicas
 
         public decimal Entradas
         {
@@ -17,8 +24,8 @@ namespace FinanceApp.ViewModels
             set
             {
                 _entradas = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(Saldo));
+                NotificarPropriedadeAlterada();
+                NotificarPropriedadeAlterada(nameof(Saldo));
             }
         }
 
@@ -28,39 +35,87 @@ namespace FinanceApp.ViewModels
             set
             {
                 _saidas = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(Saldo));
+                NotificarPropriedadeAlterada();
+                NotificarPropriedadeAlterada(nameof(Saldo));
             }
         }
 
         public decimal Saldo => Entradas - Saidas;
 
+        public string NomeUsuario
+        {
+            get => _nomeUsuario;
+            set
+            {
+                _nomeUsuario = value;
+                NotificarPropriedadeAlterada();
+            }
+        }
+
+        #endregion
+
+        #region Construtor
+
         public MainViewModel()
         {
-            CarregarDados();
+            CarregarDadosUsuario();
         }
 
-        private void CarregarDados()
+        #endregion
+
+        #region Métodos Privados
+
+        private void CarregarDadosUsuario()
         {
-            var user = Session.UsuarioLogado;
-            if (user == null) return;
+            var usuarioLogado = Session.UsuarioLogado;
 
-            using var context = new AppDbContextFactory().CreateDbContext([]);
+            if (usuarioLogado == null)
+                return;
 
-            Entradas = context.lancamentos
-                .Where(l => l.id_usuario == user.id_usuario && l.nm_tipo == "Entrada")
-                .Sum(l => l.nr_valor);
-
-            Saidas = context.lancamentos
-                .Where(l => l.id_usuario == user.id_usuario && l.nm_tipo == "Saida")
-                .Sum(l => l.nr_valor);
+            DefinirNomeUsuario(usuarioLogado.nm_nomeUsuario);
+            CarregarDadosFinanceiros(usuarioLogado.id_usuario);
         }
+
+        private void DefinirNomeUsuario(string nome)
+        {
+            NomeUsuario = nome;
+        }
+
+        private void CarregarDadosFinanceiros(int idUsuario)
+        {
+            using var contexto = new AppDbContextFactory().CreateDbContext([]);
+
+            Entradas = CalcularTotalEntradas(contexto, idUsuario);
+            Saidas = CalcularTotalSaidas(contexto, idUsuario);
+        }
+
+        private decimal CalcularTotalEntradas(AppDbContext contexto, int idUsuario)
+        {
+            return contexto.lancamentos
+                .Where(lancamento => lancamento.id_usuario == idUsuario &&
+                                   lancamento.nm_tipo.Contains("Entrada"))
+                .Sum(lancamento => lancamento.nr_valor);
+        }
+
+        private decimal CalcularTotalSaidas(AppDbContext contexto, int idUsuario)
+        {
+            return contexto.lancamentos
+                .Where(lancamento => lancamento.id_usuario == idUsuario &&
+                                   lancamento.nm_tipo.Contains("Saída"))
+                .Sum(lancamento => lancamento.nr_valor);
+        }
+
+        #endregion
+
+        #region INotifyPropertyChanged
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected void OnPropertyChanged([CallerMemberName] string name = null!)
+        protected void NotificarPropriedadeAlterada([CallerMemberName] string? nomePropriedade = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nomePropriedade));
         }
+
+        #endregion
     }
 }
