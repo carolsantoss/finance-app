@@ -38,7 +38,7 @@ namespace FinanceApp.Views
                 return;
             }
 
-            if (context.users.Any(u => u.hs_email == email))
+            if (context.users.Any(u => u.nm_email == email))
             {
                 MessageBox.Show("E-mail já cadastrado");
                 return;
@@ -46,9 +46,9 @@ namespace FinanceApp.Views
 
             var user = new User
             {
-                hs_nome = nome,
-                hs_email = email,
-                hs_password_hash = PasswordHelper.Hash(senha)
+                nm_nomeUsuario = nome,
+                nm_email = email,
+                hs_senha = PasswordHelper.Hash(senha)
             };
 
             context.users.Add(user);

@@ -28,12 +28,6 @@ namespace FinanceApp
 
             Services = services.BuildServiceProvider();
 
-            using (var scope = Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                DbInitializer.Seed(db);
-            }
-
             // Abrir Login primeiro
             var login = new LoginWindow();
             login.Show();

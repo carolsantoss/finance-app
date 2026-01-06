@@ -11,5 +11,10 @@ namespace FinanceApp.Helpers
             var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(senha));
             return Convert.ToBase64String(bytes);
         }
+
+        public static bool Verify(string senha, string hash)
+        {
+            return Hash(senha) == hash;
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using FinanceApp.Data;
 using FinanceApp.Models;
+using FinanceApp.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Security.Cryptography;
@@ -29,24 +30,22 @@ namespace FinanceApp.Views
 
         private void Login_Click(object sender, RoutedEventArgs e)
         {
-            var email = EmailTextBox.Text;
-            var senha = PasswordBox.Password;
+            var vm = new LoginViewModel
+            {
+                Email = EmailTextBox.Text,
+                Senha = PasswordBox.Password
+            };
 
-            var senhaHash = GerarHash(senha);
-
-            var user = _context.users
-                .FirstOrDefault(u => u.hs_email == email && u.hs_password_hash == senhaHash);
-
-            if (user == null)
+            if (vm.Login())
+            {
+                var main = new MainWindow();
+                main.Show();
+                this.Close();
+            }
+            else
             {
                 MessageBox.Show("Email ou senha inválidos");
-                return;
             }
-
-            // Login OK
-            var mainWindow = new MainWindow(user);
-            mainWindow.Show();
-            this.Close();
         }
 
         private string GerarHash(string senha)

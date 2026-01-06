@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using FinanceApp.Data;
 
 namespace FinanceApp.ViewModels
 {
@@ -31,6 +33,27 @@ namespace FinanceApp.ViewModels
         }
 
         public decimal Saldo => Entradas - Saidas;
+
+        public MainViewModel()
+        {
+            CarregarDados();
+        }
+
+        private void CarregarDados()
+        {
+            using var context = new AppDbContextFactory().CreateDbContext([]);
+
+            Entradas = context.lancamentos
+                              .Where(l => l.hs_tipo == "Entrada")
+                              .Select(l => (decimal?)l.hs_valor)
+                              .Sum() ?? 0;
+
+            Saidas = context.lancamentos
+                            .Where(l => l.hs_tipo == "Saida")
+                            .Select(l => (decimal?)l.hs_valor)
+                            .Sum() ?? 0;
+
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
