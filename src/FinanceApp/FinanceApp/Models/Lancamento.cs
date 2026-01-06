@@ -1,20 +1,24 @@
-﻿using System;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinanceApp.Models
 {
     public class Lancamento
     {
-        public int id_lancamento { get; set; }
+        [Key]
+        public int hs_id_lancamento { get; set; }
 
-        public decimal vl_valor { get; set; }
+        public decimal hs_valor { get; set; }
 
-        public string tp_lancamento { get; set; } = string.Empty;
+        public DateTime hs_data { get; set; }
 
-        public string ds_categoria { get; set; } = string.Empty;
+        public string hs_tipo { get; set; } = string.Empty;
 
-        public DateTime dt_lancamento { get; set; } = DateTime.Now;
+        public string hs_descricao { get; set; } = string.Empty;
 
-        public int fk_user { get; set; }
-        public User user { get; set; }
+        public int hs_id_user { get; set; }
+
+        [ForeignKey(nameof(hs_id_user))]
+        public User user { get; set; } = null!;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FinanceApp.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -17,9 +18,12 @@ namespace FinanceApp.Views
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        public User UsuarioLogado { get; }
+
+        public MainWindow(User user)
         {
             InitializeComponent();
+            UsuarioLogado = user;
         }
     }
 }

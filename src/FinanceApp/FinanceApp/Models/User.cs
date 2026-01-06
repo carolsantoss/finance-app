@@ -1,18 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace FinanceApp.Models
 {
     public class User
     {
-        public int id_user { get; set; }
+        [Key]
+        public int hs_id_user { get; set; }
 
-        public string ds_email { get; set; } = string.Empty;
+        public string hs_nome { get; set; } = string.Empty;
 
-        public string hs_password { get; set; } = string.Empty;
+        public string hs_email { get; set; } = string.Empty;
 
-        public DateTime dt_created { get; set; } = DateTime.Now;
-
-        public ICollection<Lancamento> lancamentos { get; set; }
+        public string hs_password_hash { get; set; } = string.Empty;
     }
 }
