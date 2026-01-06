@@ -1,7 +1,8 @@
-﻿using System.ComponentModel;
-using System.Linq;
+﻿using FinanceApp.Data;
+using FinanceApp.Helpers;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using FinanceApp.Data;
+using System.Linq;
 
 namespace FinanceApp.ViewModels
 {
@@ -41,23 +42,23 @@ namespace FinanceApp.ViewModels
 
         private void CarregarDados()
         {
+            var user = Session.UsuarioLogado;
+            if (user == null) return;
+
             using var context = new AppDbContextFactory().CreateDbContext([]);
 
             Entradas = context.lancamentos
-                              .Where(l => l.hs_tipo == "Entrada")
-                              .Select(l => (decimal?)l.hs_valor)
-                              .Sum() ?? 0;
+                .Where(l => l.id_usuario == user.id_usuario && l.nm_tipo == "Entrada")
+                .Sum(l => l.nr_valor);
 
             Saidas = context.lancamentos
-                            .Where(l => l.hs_tipo == "Saida")
-                            .Select(l => (decimal?)l.hs_valor)
-                            .Sum() ?? 0;
-
+                .Where(l => l.id_usuario == user.id_usuario && l.nm_tipo == "Saida")
+                .Sum(l => l.nr_valor);
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        protected void OnPropertyChanged([CallerMemberName] string name = null!)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }

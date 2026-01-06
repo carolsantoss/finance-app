@@ -6,19 +6,20 @@ namespace FinanceApp.Models
     public class Lancamento
     {
         [Key]
-        public int hs_id_lancamento { get; set; }
+        public int id_lancamento { get; set; }
 
-        public decimal hs_valor { get; set; }
+        public int id_usuario { get; set; }
 
-        public DateTime hs_data { get; set; }
+        public string nm_tipo { get; set; } = string.Empty;
 
-        public string hs_tipo { get; set; } = string.Empty;
+        public string nm_descricao { get; set; } = string.Empty;
 
-        public string hs_descricao { get; set; } = string.Empty;
+        public decimal nr_valor { get; set; }
 
-        public int hs_id_user { get; set; }
+        public DateTime dt_dataLancamento { get; set; }
 
-        [ForeignKey(nameof(hs_id_user))]
-        public User user { get; set; } = null!;
+        public string nm_formaPagamento { get; set; } = string.Empty; // Debito / Credito
+
+        public int nr_parcelas { get; set; } = 1;
     }
 }

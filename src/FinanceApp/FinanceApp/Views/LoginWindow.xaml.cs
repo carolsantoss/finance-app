@@ -1,10 +1,7 @@
 ﻿using FinanceApp.Data;
-using FinanceApp.Models;
+using FinanceApp.Helpers;
 using FinanceApp.ViewModels;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Windows;
 
 namespace FinanceApp.Views
@@ -20,9 +17,9 @@ namespace FinanceApp.Views
             _context = new AppDbContext(
                 new DbContextOptionsBuilder<AppDbContext>()
                     .UseMySql(
-                        "server=localhost;database=financeapp;user=root;password=Oliveir@1920",
+                        "server=localhost;database=finance_app;user=root;password=Oliveir@1920",
                         ServerVersion.AutoDetect(
-                            "server=localhost;database=financeapp;user=root;password=Oliveir@1920"
+                            "server=localhost;database=finance_app;user=root;password=Oliveir@1920"
                         )
                     ).Options
             );
@@ -38,6 +35,13 @@ namespace FinanceApp.Views
 
             if (vm.Login())
             {
+                var user = _context.users.FirstOrDefault(u => u.nm_email == vm.Email);
+
+                if (user != null)
+                {
+                    Session.UsuarioLogado = user;
+                }
+
                 var main = new MainWindow();
                 main.Show();
                 this.Close();
@@ -46,13 +50,6 @@ namespace FinanceApp.Views
             {
                 MessageBox.Show("Email ou senha inválidos");
             }
-        }
-
-        private string GerarHash(string senha)
-        {
-            using var sha = SHA256.Create();
-            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(senha));
-            return Convert.ToBase64String(bytes);
         }
 
         private void BtnCriarConta_Click(object sender, RoutedEventArgs e)

@@ -34,7 +34,8 @@
                         Foreground="White"
                         BorderBrush="#555555"
                         Height="40"
-                        Margin="0,0,0,10"/>
+                        Margin="0,0,0,10"
+                        Click="BtnNovoLancamento_Click"/>
 
                 <Button Content="Extratos"
                         Background="#3C3C3C"

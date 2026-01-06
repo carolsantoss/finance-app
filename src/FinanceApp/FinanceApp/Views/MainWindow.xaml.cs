@@ -24,5 +24,12 @@ namespace FinanceApp.Views
             InitializeComponent();
             DataContext = new MainViewModel();
         }
+
+        private void BtnNovoLancamento_Click(object sender, RoutedEventArgs e)
+        {
+            var tela = new LancamentoWindow();
+            tela.ShowDialog();
+        }
+
     }
 }
