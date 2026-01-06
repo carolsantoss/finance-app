@@ -1,0 +1,423 @@
+﻿<Window x:Class="FinanceApp.Views.ExtratosWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Extratos"
+        Height="700"
+        Width="1000"
+        WindowStartupLocation="CenterScreen"
+        Background="#1B1B1B">
+
+    <Window.Resources>
+        <!-- Estilo para cabeçalho da lista -->
+        <Style x:Key="HeaderText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#888888"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <!-- Estilo para células da lista -->
+        <Style x:Key="CellText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Estilo para botões de ação -->
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#3C3C3C"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo customizado para ComboBox -->
+        <Style x:Key="DarkComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                          Grid.Column="2"
+                                          Focusable="false"
+                                          IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press"
+                                          Background="Transparent"
+                                          BorderThickness="0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="24"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="{TemplateBinding SelectionBoxItem}"
+                                               Foreground="White"
+                                               FontSize="14"
+                                               FontWeight="Medium"
+                                               Margin="12,0,0,0"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="▼"
+                                               FontSize="9"
+                                               Foreground="White"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Center"/>
+                                </Grid>
+                            </ToggleButton>
+                            <Popup Name="Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Border Name="DropDownBorder"
+                                        Background="#2A2A2E"
+                                        BorderBrush="#3C3C3C"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        MinWidth="{TemplateBinding ActualWidth}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo para ComboBoxItem -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}"
+                                CornerRadius="4"
+                                Margin="2">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter Property="Background" Value="#3C3C3C"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#4CAF50"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="#252526"
+            CornerRadius="12"
+            Margin="20">
+        <Grid Margin="32">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- CABEÇALHO -->
+            <Border Grid.Row="0"
+                    Background="#2A2A2E"
+                    CornerRadius="8"
+                    Padding="24,20"
+                    Margin="0,0,0,24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="📋 Extratos"
+                                   FontSize="28"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   Margin="0,0,0,6"/>
+                        <TextBlock Text="Visualize todos os seus lançamentos financeiros"
+                                   FontSize="14"
+                                   Foreground="#999999"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="Total de lançamentos:"
+                                   Foreground="#CCCCCC"
+                                   FontSize="14"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding TotalLancamentos}"
+                                   Foreground="#4CAF50"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- FILTROS -->
+            <Border Grid.Row="1"
+                    Background="#2A2A2E"
+                    CornerRadius="8"
+                    Padding="20"
+                    Margin="0,0,0,20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- FILTRO POR TIPO -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Tipo"
+                                   Foreground="#CCCCCC"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,6"/>
+                        <Border Background="#1F1F23"
+                                BorderBrush="#4CAF50"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Height="38">
+                            <ComboBox x:Name="cbFiltroTipo"
+                                      Style="{StaticResource DarkComboBox}"
+                                      SelectionChanged="AplicarFiltros_Click">
+                                <ComboBoxItem Content="Todos" IsSelected="True"/>
+                                <ComboBoxItem Content="Entrada"/>
+                                <ComboBoxItem Content="Saída"/>
+                            </ComboBox>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- FILTRO POR PERÍODO -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Período"
+                                   Foreground="#CCCCCC"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,6"/>
+                        <Border Background="#1F1F23"
+                                BorderBrush="#4CAF50"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Height="38">
+                            <ComboBox x:Name="cbFiltroPeriodo"
+                                      Style="{StaticResource DarkComboBox}"
+                                      SelectionChanged="AplicarFiltros_Click">
+                                <ComboBoxItem Content="Todos" IsSelected="True"/>
+                                <ComboBoxItem Content="Hoje"/>
+                                <ComboBoxItem Content="Esta semana"/>
+                                <ComboBoxItem Content="Este mês"/>
+                                <ComboBoxItem Content="Este ano"/>
+                            </ComboBox>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- BOTÃO LIMPAR FILTROS -->
+                    <Button Grid.Column="4"
+                            Content="🔄 Atualizar"
+                            Background="#4CAF50"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Padding="20,0"
+                            Height="36"
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Cursor="Hand"
+                            Click="AtualizarLista_Click"
+                            VerticalAlignment="Bottom">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="6"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#45A049"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- LISTA DE LANÇAMENTOS -->
+            <Border Grid.Row="2"
+                    Background="#2A2A2E"
+                    CornerRadius="8"
+                    Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- CABEÇALHO DA TABELA -->
+                    <Border Grid.Row="0"
+                            Background="#1F1F23"
+                            CornerRadius="8,8,0,0"
+                            Padding="20,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="Data" Style="{StaticResource HeaderText}"/>
+                            <TextBlock Grid.Column="1" Text="Descrição" Style="{StaticResource HeaderText}"/>
+                            <TextBlock Grid.Column="2" Text="Tipo" Style="{StaticResource HeaderText}"/>
+                            <TextBlock Grid.Column="3" Text="Pagamento" Style="{StaticResource HeaderText}"/>
+                            <TextBlock Grid.Column="4" Text="Valor" Style="{StaticResource HeaderText}"/>
+                            <TextBlock Grid.Column="5" Text="Parcelas" Style="{StaticResource HeaderText}"/>
+                            <TextBlock Grid.Column="6" Text="Ações" Style="{StaticResource HeaderText}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- CORPO DA TABELA -->
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="0">
+                        <ItemsControl x:Name="ListaLancamentos">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#3C3C3C"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="20,16"
+                                            Background="Transparent">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#252526"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="2*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Data -->
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding DataFormatada}"
+                                                       Style="{StaticResource CellText}"
+                                                       Foreground="#CCCCCC"
+                                                       FontSize="12"/>
+
+                                            <!-- Descrição -->
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding nm_descricao}"
+                                                       Style="{StaticResource CellText}"
+                                                       TextTrimming="CharacterEllipsis"/>
+
+                                            <!-- Tipo -->
+                                            <Border Grid.Column="2"
+                                                    Background="{Binding CorTipo}"
+                                                    CornerRadius="4"
+                                                    Padding="8,4"
+                                                    HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding nm_tipo}"
+                                                           Foreground="White"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"/>
+                                            </Border>
+
+                                            <!-- Pagamento -->
+                                            <TextBlock Grid.Column="3"
+                                                       Text="{Binding nm_formaPagamento}"
+                                                       Style="{StaticResource CellText}"
+                                                       Foreground="#CCCCCC"
+                                                       FontSize="12"/>
+
+                                            <!-- Valor -->
+                                            <TextBlock Grid.Column="4"
+                                                       Text="{Binding ValorFormatado}"
+                                                       Style="{StaticResource CellText}"
+                                                       Foreground="{Binding CorValor}"
+                                                       FontWeight="Bold"/>
+
+                                            <!-- Parcelas -->
+                                            <TextBlock Grid.Column="5"
+                                                       Text="{Binding ParcelasTexto}"
+                                                       Style="{StaticResource CellText}"
+                                                       Foreground="#999999"
+                                                       FontSize="12"
+                                                       HorizontalAlignment="Center"/>
+
+                                            <!-- Ações -->
+                                            <Button Grid.Column="6"
+                                                    Content="🗑️"
+                                                    Style="{StaticResource ActionButton}"
+                                                    Tag="{Binding id_lancamento}"
+                                                    Click="ExcluirLancamento_Click"
+                                                    ToolTip="Excluir lançamento"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

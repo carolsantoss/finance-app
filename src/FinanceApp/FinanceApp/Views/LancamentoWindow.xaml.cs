@@ -45,6 +45,7 @@ namespace FinanceApp.Views
         #endregion
 
         #region Eventos de Interface
+
         private void cbPagamento_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ExibirOcultarPainelParcelas();
@@ -101,11 +102,20 @@ namespace FinanceApp.Views
             if (cbTipo.SelectedItem == null ||
                 string.IsNullOrWhiteSpace(txtDescricao.Text) ||
                 string.IsNullOrWhiteSpace(txtValor.Text) ||
+                cbPagamento.SelectedItem == null ||
                 dpData.SelectedDate == null)
             {
                 ExibirMensagemErro("Preencha todos os campos obrigatórios.");
                 return false;
             }
+
+            if (PainelParcelas.Visibility == Visibility.Visible && 
+                string.IsNullOrWhiteSpace(txtParcelas.Text))
+            {
+                ExibirMensagemErro("Informe o número de parcelas para pagamento no crédito.");
+                return false;
+            }
+
             return true;
         }
 
@@ -226,15 +236,37 @@ namespace FinanceApp.Views
         private Lancamento CriarNovoLancamento(decimal valor)
         {
             var itemTipoSelecionado = (ComboBoxItem)cbTipo.SelectedItem;
+            var itemPagamentoSelecionado = (ComboBoxItem)cbPagamento.SelectedItem;
+
+            var tipoLancamento = ExtrairTextoSemEmoji(itemTipoSelecionado.Content.ToString()!);
+            var formaPagamento = ExtrairTextoSemEmoji(itemPagamentoSelecionado.Content.ToString()!);
+            var numeroParcelas = ObterNumeroParcelas();
 
             return new Lancamento
             {
-                nm_tipo = itemTipoSelecionado.Content.ToString(),
+                nm_tipo = tipoLancamento,
                 nm_descricao = txtDescricao.Text,
                 nr_valor = valor,
                 dt_dataLancamento = dpData.SelectedDate!.Value,
+                nm_formaPagamento = formaPagamento,
+                nr_parcelas = numeroParcelas,
                 id_usuario = Session.UsuarioLogado!.id_usuario
             };
+        }
+
+        private string ExtrairTextoSemEmoji(string textoCompleto)
+        {
+            return textoCompleto.Split(' ').LastOrDefault()?.Trim() ?? textoCompleto;
+        }
+
+        private int ObterNumeroParcelas()
+        {
+            if (PainelParcelas.Visibility == Visibility.Visible && 
+                int.TryParse(txtParcelas.Text, out int parcelas))
+            {
+                return parcelas;
+            }
+            return 1;
         }
 
         #endregion

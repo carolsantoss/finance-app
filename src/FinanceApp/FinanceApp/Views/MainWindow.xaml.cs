@@ -29,7 +29,21 @@ namespace FinanceApp.Views
         {
             var tela = new LancamentoWindow();
             tela.ShowDialog();
+            
+            AtualizarDados();
         }
 
+        private void BtnExtratos_Click(object sender, RoutedEventArgs e)
+        {
+            var tela = new ExtratosWindow();
+            tela.ShowDialog();
+            
+            AtualizarDados();
+        }
+
+        private void AtualizarDados()
+        {
+            DataContext = new MainViewModel();
+        }
     }
 }
