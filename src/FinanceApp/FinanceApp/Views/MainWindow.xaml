@@ -126,9 +126,6 @@
                             Style="{StaticResource MenuButton}"
                             Click="BtnExtratos_Click"/>
 
-                    <Button Content="📈  Relatórios"
-                            Style="{StaticResource MenuButton}"/>
-
                     <Separator Background="#3C3C3C" 
                                Margin="0,12,0,12"/>
 
@@ -138,11 +135,9 @@
                                FontWeight="Bold"
                                Margin="16,0,0,8"/>
 
-                    <Button Content="⚙️  Preferências"
-                            Style="{StaticResource MenuButton}"/>
-
                     <Button Content="👤  Perfil"
-                            Style="{StaticResource MenuButton}"/>
+                            Style="{StaticResource MenuButton}"
+                            Click="BtnPerfil_Click"/>
                 </StackPanel>
 
                 <!-- RODAPÉ DO MENU -->

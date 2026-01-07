@@ -104,6 +104,15 @@ namespace FinanceApp.Views
             AtualizarDados();
         }
 
+        private void BtnPerfil_Click(object sender, RoutedEventArgs e)
+        {
+            var tela = new PerfilWindow();
+            tela.ShowDialog();
+
+            // Atualiza o nome do usuário caso tenha sido alterado
+            CarregarNomeUsuario();
+        }
+
         private void BtnSair_Click(object sender, RoutedEventArgs e)
         {
             Session.UsuarioLogado = null;
