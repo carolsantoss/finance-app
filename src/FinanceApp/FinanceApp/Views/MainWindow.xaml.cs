@@ -177,10 +177,13 @@ namespace FinanceApp.Views
 
             foreach (var lancamento in lancamentos)
             {
-                if (lancamento.nr_parcelas > 1)
+                // Só expande se tiver mais de 1 parcela total E se parcelaInicial <= total
+                if (lancamento.nr_parcelas > 1 && lancamento.nr_parcelaInicial <= lancamento.nr_parcelas)
                 {
-                    // Cria todas as parcelas
-                    for (int i = 1; i <= lancamento.nr_parcelas; i++)
+                    int parcelasRestantes = ObterQuantidadeParcelasRestantes(lancamento);
+                    
+                    // Cria apenas as parcelas restantes
+                    for (int i = 1; i <= parcelasRestantes; i++)
                     {
                         var parcelaVirtual = CriarParcelaVirtual(lancamento, i);
                         lancamentosExpandidos.Add(parcelaVirtual);
@@ -188,7 +191,7 @@ namespace FinanceApp.Views
                 }
                 else
                 {
-                    // Lançamento sem parcelamento
+                    // Lançamento sem parcelamento ou parcela única
                     lancamentosExpandidos.Add(lancamento);
                 }
             }
@@ -198,17 +201,29 @@ namespace FinanceApp.Views
 
         private Lancamento CriarParcelaVirtual(Lancamento lancamentoOriginal, int numeroParcela)
         {
+            // Calcula o número real da parcela baseado na parcela inicial
+            int numeroParcelaReal = lancamentoOriginal.nr_parcelaInicial + numeroParcela - 1;
+            
+            // CORREÇÃO: Divide pelo TOTAL de parcelas, não pelas restantes
+            decimal valorPorParcela = lancamentoOriginal.nr_valor / lancamentoOriginal.nr_parcelas;
+            
             return new Lancamento
             {
                 id_lancamento = lancamentoOriginal.id_lancamento * 1000 + numeroParcela,
                 id_usuario = lancamentoOriginal.id_usuario,
-                nm_descricao = $"{lancamentoOriginal.nm_descricao} ({numeroParcela}/{lancamentoOriginal.nr_parcelas})",
+                nm_descricao = $"{lancamentoOriginal.nm_descricao} ({numeroParcelaReal}/{lancamentoOriginal.nr_parcelas})",
                 nm_tipo = lancamentoOriginal.nm_tipo,
                 nm_formaPagamento = lancamentoOriginal.nm_formaPagamento,
-                nr_valor = lancamentoOriginal.nr_valor / lancamentoOriginal.nr_parcelas,
+                nr_valor = valorPorParcela,
                 nr_parcelas = lancamentoOriginal.nr_parcelas,
+                nr_parcelaInicial = lancamentoOriginal.nr_parcelaInicial,
                 dt_dataLancamento = lancamentoOriginal.dt_dataLancamento.AddMonths(numeroParcela - 1)
             };
+        }
+
+        private int ObterQuantidadeParcelasRestantes(Lancamento lancamento)
+        {
+            return lancamento.nr_parcelas - lancamento.nr_parcelaInicial + 1;
         }
 
         #endregion

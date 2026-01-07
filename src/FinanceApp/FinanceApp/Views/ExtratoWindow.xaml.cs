@@ -205,6 +205,9 @@ namespace FinanceApp.Views
             // Calcula o número real da parcela baseado na parcela inicial
             int numeroParcelaReal = lancamentoOriginal.nr_parcelaInicial + numeroParcela - 1;
             
+            // CORREÇÃO: Divide pelo TOTAL de parcelas, não pelas restantes
+            decimal valorPorParcela = lancamentoOriginal.nr_valor / lancamentoOriginal.nr_parcelas;
+            
             return new Lancamento
             {
                 id_lancamento = lancamentoOriginal.id_lancamento * 1000 + numeroParcela,
@@ -212,7 +215,7 @@ namespace FinanceApp.Views
                 nm_descricao = $"{lancamentoOriginal.nm_descricao} ({numeroParcelaReal}/{lancamentoOriginal.nr_parcelas})",
                 nm_tipo = lancamentoOriginal.nm_tipo,
                 nm_formaPagamento = lancamentoOriginal.nm_formaPagamento,
-                nr_valor = lancamentoOriginal.nr_valor / ObterQuantidadeParcelasRestantes(lancamentoOriginal),
+                nr_valor = valorPorParcela,
                 nr_parcelas = lancamentoOriginal.nr_parcelas,
                 nr_parcelaInicial = lancamentoOriginal.nr_parcelaInicial,
                 dt_dataLancamento = lancamentoOriginal.dt_dataLancamento.AddMonths(numeroParcela - 1)
@@ -231,10 +234,11 @@ namespace FinanceApp.Views
 
             foreach (var lancamento in lancamentos)
             {
-                int parcelasRestantes = ObterQuantidadeParcelasRestantes(lancamento);
-
-                if (parcelasRestantes > 1)
+                // Só expande se tiver mais de 1 parcela total E se parcelaInicial <= total
+                if (lancamento.nr_parcelas > 1 && lancamento.nr_parcelaInicial <= lancamento.nr_parcelas)
                 {
+                    int parcelasRestantes = ObterQuantidadeParcelasRestantes(lancamento);
+                    
                     // Cria apenas as parcelas restantes
                     for (int i = 1; i <= parcelasRestantes; i++)
                     {
@@ -244,7 +248,7 @@ namespace FinanceApp.Views
                 }
                 else
                 {
-                    // Lançamento sem parcelamento
+                    // Lançamento sem parcelamento ou parcela única
                     lancamentosExpandidos.Add(lancamento);
                 }
             }
@@ -384,9 +388,22 @@ namespace FinanceApp.Views
         public string ValorFormatado => _lancamento.nr_valor.ToString("C2",
             CultureInfo.GetCultureInfo("pt-BR"));
 
-        public string ParcelasTexto => _lancamento.nr_parcelas > 1
-            ? $"{_lancamento.nr_parcelas}x"
-            : "-";
+        public string ParcelasTexto
+        {
+            get
+            {
+                var descricao = _lancamento.nm_descricao;
+                var inicioParenteses = descricao.LastIndexOf('(');
+                var fimParenteses = descricao.LastIndexOf(')');
+                
+                if (inicioParenteses >= 0 && fimParenteses > inicioParenteses)
+                {
+                    return descricao.Substring(inicioParenteses + 1, fimParenteses - inicioParenteses - 1);
+                }
+                
+                return "-";
+            }
+        }
 
         public string CorTipo => _lancamento.nm_tipo.Contains("Entrada")
             ? "#4CAF50"

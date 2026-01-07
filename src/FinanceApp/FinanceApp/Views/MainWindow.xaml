@@ -118,7 +118,7 @@
                     <Button Content="📊  Dashboard"
                             Style="{StaticResource MenuButtonActive}"/>
 
-                    <Button Content="💸  Lançar Gastos"
+                    <Button Content="💸  Lançamentos"
                             Style="{StaticResource MenuButton}"
                             Click="BtnNovoLancamento_Click"/>
 

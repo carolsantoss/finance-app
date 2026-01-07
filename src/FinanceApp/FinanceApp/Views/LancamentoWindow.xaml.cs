@@ -40,6 +40,7 @@ namespace FinanceApp.Views
         private void InicializarCampos()
         {
             dpData.SelectedDate = DateTime.Now;
+            txtParcelaInicial.Text = "1"; // Garante inicialização
         }
 
         #endregion
@@ -227,6 +228,11 @@ namespace FinanceApp.Views
             if (ehCredito)
             {
                 PainelParcelas.Visibility = Visibility.Visible;
+                // Garante que o campo inicial sempre tem valor 1
+                if (string.IsNullOrWhiteSpace(txtParcelaInicial.Text) || txtParcelaInicial.Text == "0")
+                {
+                    txtParcelaInicial.Text = "1";
+                }
             }
             else
             {
@@ -268,8 +274,15 @@ namespace FinanceApp.Views
 
             if (PainelParcelas.Visibility == Visibility.Visible)
             {
-                parcelaTotal = int.Parse(txtParcelaTotal.Text);
-                parcelaInicial = int.Parse(txtParcelaInicial.Text);
+                if (!int.TryParse(txtParcelaTotal.Text, out parcelaTotal) || parcelaTotal < 1)
+                {
+                    parcelaTotal = 1;
+                }
+                
+                if (!int.TryParse(txtParcelaInicial.Text, out parcelaInicial) || parcelaInicial < 1)
+                {
+                    parcelaInicial = 1;
+                }
             }
 
             return new Lancamento
