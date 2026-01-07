@@ -56,6 +56,7 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -68,26 +69,33 @@
                                           ClickMode="Press"
                                           Background="Transparent"
                                           BorderThickness="0">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="24"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0"
-                                               Text="{TemplateBinding SelectionBoxItem}"
-                                               Foreground="White"
-                                               FontSize="14"
-                                               FontWeight="Medium"
-                                               Margin="12,0,0,0"
-                                               VerticalAlignment="Center"
-                                               HorizontalAlignment="Left"/>
-                                    <TextBlock Grid.Column="1"
-                                               Text="▼"
-                                               FontSize="9"
-                                               Foreground="White"
-                                               VerticalAlignment="Center"
-                                               HorizontalAlignment="Center"/>
-                                </Grid>
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Grid Background="Transparent">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="24"/>
+                                            </Grid.ColumnDefinitions>
+                                            <ContentPresenter Grid.Column="0"
+                                                            Content="{TemplateBinding Content}"
+                                                            Margin="12,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            HorizontalAlignment="Left"/>
+                                            <TextBlock Grid.Column="1"
+                                                     Text="▼"
+                                                     FontSize="9"
+                                                     Foreground="White"
+                                                     VerticalAlignment="Center"
+                                                     HorizontalAlignment="Center"/>
+                                        </Grid>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                                <ToggleButton.Content>
+                                    <TextBlock Text="{TemplateBinding SelectionBoxItem}"
+                                             Foreground="White"
+                                             FontSize="14"
+                                             VerticalAlignment="Center"/>
+                                </ToggleButton.Content>
                             </ToggleButton>
                             <Popup Name="Popup"
                                    Placement="Bottom"
@@ -129,7 +137,7 @@
                             <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsHighlighted" Value="True">
+                            <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="#3C3C3C"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
@@ -197,7 +205,7 @@
 
             <!-- RESUMO FINANCEIRO DO MÊS -->
             <Border Grid.Row="1"
-                    Background="#2A2A2E"
+                    Background="#2A2E2E"
                     CornerRadius="8"
                     Padding="20"
                     Margin="0,0,0,20">
@@ -277,7 +285,9 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="16"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="120"/>
                         <ColumnDefinition Width="16"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
@@ -304,9 +314,9 @@
                         </Border>
                     </StackPanel>
 
-                    <!-- FILTRO POR PERÍODO -->
+                    <!-- FILTRO POR MÊS -->
                     <StackPanel Grid.Column="2">
-                        <TextBlock Text="Período"
+                        <TextBlock Text="Mês"
                                    Foreground="#CCCCCC"
                                    FontSize="12"
                                    FontWeight="SemiBold"
@@ -316,22 +326,51 @@
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Height="38">
-                            <ComboBox x:Name="cbFiltroPeriodo"
+                            <ComboBox x:Name="cbFiltroMes"
                                       Style="{StaticResource DarkComboBox}"
                                       SelectionChanged="AplicarFiltros_Click">
-                                <ComboBoxItem Content="Todos"/>
+                                <ComboBoxItem Content="Todos" IsSelected="True"/>
                                 <ComboBoxItem Content="Hoje"/>
                                 <ComboBoxItem Content="Esta semana"/>
-                                <ComboBoxItem Content="Este mês"/>
-                                <ComboBoxItem Content="Este ano"/>
+                                <ComboBoxItem Content="Este mês" Tag="EsteMes"/>
+                                <ComboBoxItem Content="Este ano" Tag="EsteAno"/>
                                 <ComboBoxItem Content="---" IsEnabled="False"/>
-                                <!-- Meses específicos serão adicionados dinamicamente -->
+                                <ComboBoxItem Content="Janeiro" Tag="1"/>
+                                <ComboBoxItem Content="Fevereiro" Tag="2"/>
+                                <ComboBoxItem Content="Março" Tag="3"/>
+                                <ComboBoxItem Content="Abril" Tag="4"/>
+                                <ComboBoxItem Content="Maio" Tag="5"/>
+                                <ComboBoxItem Content="Junho" Tag="6"/>
+                                <ComboBoxItem Content="Julho" Tag="7"/>
+                                <ComboBoxItem Content="Agosto" Tag="8"/>
+                                <ComboBoxItem Content="Setembro" Tag="9"/>
+                                <ComboBoxItem Content="Outubro" Tag="10"/>
+                                <ComboBoxItem Content="Novembro" Tag="11"/>
+                                <ComboBoxItem Content="Dezembro" Tag="12"/>
                             </ComboBox>
                         </Border>
                     </StackPanel>
 
+                    <!-- FILTRO POR ANO -->
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="Ano"
+                                   Foreground="#CCCCCC"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,6"/>
+                        <Border Background="#1F1F23"
+                                BorderBrush="#4CAF50"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Height="38">
+                            <ComboBox x:Name="cbFiltroAno"
+                                      Style="{StaticResource DarkComboBox}"
+                                      SelectionChanged="AplicarFiltros_Click"/>
+                        </Border>
+                    </StackPanel>
+
                     <!-- BOTÃO ATUALIZAR -->
-                    <Button Grid.Column="4"
+                    <Button Grid.Column="6"
                             Content="🔄 Atualizar"
                             Background="#4CAF50"
                             Foreground="White"

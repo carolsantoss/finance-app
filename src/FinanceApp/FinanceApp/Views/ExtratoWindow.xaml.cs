@@ -84,10 +84,8 @@ namespace FinanceApp.Views
             InitializeComponent();
             DataContext = this;
             
-            // Adiciona os meses ao ComboBox
-            AdicionarMesesAoFiltro();
-            
-            // Define o filtro padrão para "Este mês" antes de carregar
+            PopularAnosFiltro();
+
             DefinirFiltroPadrao();
             
             CarregarLancamentos();
@@ -122,36 +120,33 @@ namespace FinanceApp.Views
 
         #region Métodos de Carregamento
 
-        private void AdicionarMesesAoFiltro()
+        private void PopularAnosFiltro()
         {
-            var culturaPortugues = new CultureInfo("pt-BR");
-            var dataAtual = DateTime.Now;
-
-            // Adiciona os últimos 12 meses
-            for (int i = 0; i < 12; i++)
+            int anoAtual = DateTime.Now.Year;
+            
+            for (int ano = anoAtual - 5; ano <= anoAtual + 2; ano++)
             {
-                var mes = dataAtual.AddMonths(-i);
-                var nomeMes = culturaPortugues.DateTimeFormat.GetMonthName(mes.Month);
-                var nomeMesCapitalizado = char.ToUpper(nomeMes[0]) + nomeMes.Substring(1);
-                
                 var item = new ComboBoxItem
                 {
-                    Content = $"{nomeMesCapitalizado}/{mes.Year}",
-                    Tag = mes // Armazena a data no Tag para usar depois
+                    Content = ano.ToString(),
+                    Tag = ano
                 };
+                cbFiltroAno.Items.Add(item);
                 
-                cbFiltroPeriodo.Items.Add(item);
+                if (ano == anoAtual)
+                {
+                    cbFiltroAno.SelectedItem = item;
+                }
             }
         }
 
         private void DefinirFiltroPadrao()
         {
-            // Seleciona "Este mês" como padrão
-            foreach (ComboBoxItem item in cbFiltroPeriodo.Items)
+            foreach (ComboBoxItem item in cbFiltroMes.Items)
             {
-                if (item.Content.ToString() == "Este mês")
+                if (item.Content.ToString() == "Todos")
                 {
-                    cbFiltroPeriodo.SelectedItem = item;
+                    cbFiltroMes.SelectedItem = item;
                     break;
                 }
             }
@@ -175,13 +170,10 @@ namespace FinanceApp.Views
                 .OrderByDescending(l => l.dt_dataLancamento)
                 .ToList();
 
-            // Expandir lançamentos parcelados
             var lancamentosExpandidos = ExpandirLancamentosParcelados(lancamentos);
             
-            // Aplicar filtro de período DEPOIS de expandir as parcelas
             var lancamentosFiltrados = AplicarFiltroPeriodoEmLista(lancamentosExpandidos);
 
-            // Calcular saldo do período filtrado
             CalcularSaldoPeriodo(lancamentosFiltrados);
 
             AtualizarListaInterface(lancamentosFiltrados);
@@ -202,10 +194,8 @@ namespace FinanceApp.Views
 
         private Lancamento CriarParcelaVirtual(Lancamento lancamentoOriginal, int numeroParcela)
         {
-            // Calcula o número real da parcela baseado na parcela inicial
             int numeroParcelaReal = lancamentoOriginal.nr_parcelaInicial + numeroParcela - 1;
             
-            // CORREÇÃO: Divide pelo TOTAL de parcelas, não pelas restantes
             decimal valorPorParcela = lancamentoOriginal.nr_valor / lancamentoOriginal.nr_parcelas;
             
             return new Lancamento
@@ -224,7 +214,6 @@ namespace FinanceApp.Views
 
         private int ObterQuantidadeParcelasRestantes(Lancamento lancamento)
         {
-            // Calcula quantas parcelas faltam (de parcelaInicial até o total)
             return lancamento.nr_parcelas - lancamento.nr_parcelaInicial + 1;
         }
 
@@ -234,12 +223,10 @@ namespace FinanceApp.Views
 
             foreach (var lancamento in lancamentos)
             {
-                // Só expande se tiver mais de 1 parcela total E se parcelaInicial <= total
                 if (lancamento.nr_parcelas > 1 && lancamento.nr_parcelaInicial <= lancamento.nr_parcelas)
                 {
                     int parcelasRestantes = ObterQuantidadeParcelasRestantes(lancamento);
                     
-                    // Cria apenas as parcelas restantes
                     for (int i = 1; i <= parcelasRestantes; i++)
                     {
                         var parcelaVirtual = CriarParcelaVirtual(lancamento, i);
@@ -248,7 +235,6 @@ namespace FinanceApp.Views
                 }
                 else
                 {
-                    // Lançamento sem parcelamento ou parcela única
                     lancamentosExpandidos.Add(lancamento);
                 }
             }
@@ -273,31 +259,52 @@ namespace FinanceApp.Views
 
         private List<Lancamento> AplicarFiltroPeriodoEmLista(List<Lancamento> lancamentos)
         {
-            if (cbFiltroPeriodo == null || cbFiltroPeriodo.SelectedItem == null)
+            if (cbFiltroMes == null || cbFiltroMes.SelectedItem == null)
                 return lancamentos;
 
-            var itemSelecionado = cbFiltroPeriodo.SelectedItem as ComboBoxItem;
+            var itemSelecionado = cbFiltroMes.SelectedItem as ComboBoxItem;
             var periodoSelecionado = itemSelecionado?.Content.ToString();
+            var mesSelecionadoTag = itemSelecionado?.Tag?.ToString();
             var dataAtual = DateTime.Now;
 
-            // Verifica se é um mês específico (tem Tag)
-            if (itemSelecionado?.Tag is DateTime mesEspecifico)
+            if (periodoSelecionado == "Todos")
             {
+                if (cbFiltroAno?.SelectedItem is ComboBoxItem anoItem && anoItem.Tag != null)
+                {
+                    int anoSelecionado = (int)anoItem.Tag;
+                    return lancamentos.Where(l => l.dt_dataLancamento.Year == anoSelecionado).ToList();
+                }
+                return lancamentos;
+            }
+            
+            if (periodoSelecionado == "Hoje")
+                return lancamentos.Where(l => l.dt_dataLancamento.Date == dataAtual.Date).ToList();
+            
+            if (periodoSelecionado == "Esta semana")
+                return lancamentos.Where(l => l.dt_dataLancamento >= dataAtual.AddDays(-7)).ToList();
+            
+            if (periodoSelecionado == "Este mês" || mesSelecionadoTag == "EsteMes")
+                return lancamentos.Where(l => l.dt_dataLancamento.Month == dataAtual.Month &&
+                                             l.dt_dataLancamento.Year == dataAtual.Year).ToList();
+            
+            if (periodoSelecionado == "Este ano" || mesSelecionadoTag == "EsteAno")
+                return lancamentos.Where(l => l.dt_dataLancamento.Year == dataAtual.Year).ToList();
+
+            if (!string.IsNullOrEmpty(mesSelecionadoTag) && int.TryParse(mesSelecionadoTag, out int mesNumero))
+            {
+                int anoSelecionado = dataAtual.Year;
+                
+                if (cbFiltroAno?.SelectedItem is ComboBoxItem anoItem && anoItem.Tag != null)
+                {
+                    anoSelecionado = (int)anoItem.Tag;
+                }
+
                 return lancamentos.Where(l => 
-                    l.dt_dataLancamento.Month == mesEspecifico.Month &&
-                    l.dt_dataLancamento.Year == mesEspecifico.Year).ToList();
+                    l.dt_dataLancamento.Month == mesNumero &&
+                    l.dt_dataLancamento.Year == anoSelecionado).ToList();
             }
 
-            // Filtros rápidos
-            return periodoSelecionado switch
-            {
-                "Hoje" => lancamentos.Where(l => l.dt_dataLancamento.Date == dataAtual.Date).ToList(),
-                "Esta semana" => lancamentos.Where(l => l.dt_dataLancamento >= dataAtual.AddDays(-7)).ToList(),
-                "Este mês" => lancamentos.Where(l => l.dt_dataLancamento.Month == dataAtual.Month &&
-                                                     l.dt_dataLancamento.Year == dataAtual.Year).ToList(),
-                "Este ano" => lancamentos.Where(l => l.dt_dataLancamento.Year == dataAtual.Year).ToList(),
-                _ => lancamentos
-            };
+            return lancamentos;
         }
 
         private void AtualizarListaInterface(List<Lancamento> lancamentos)
