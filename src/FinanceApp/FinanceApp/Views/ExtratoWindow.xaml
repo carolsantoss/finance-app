@@ -151,6 +151,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -194,8 +195,80 @@
                 </Grid>
             </Border>
 
-            <!-- FILTROS -->
+            <!-- RESUMO FINANCEIRO DO MÊS -->
             <Border Grid.Row="1"
+                    Background="#2A2A2E"
+                    CornerRadius="8"
+                    Padding="20"
+                    Margin="0,0,0,20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ENTRADAS -->
+                    <Border Grid.Column="0"
+                            Background="#1F1F23"
+                            CornerRadius="6"
+                            Padding="16,12"
+                            Margin="0,0,8,0">
+                        <StackPanel>
+                            <TextBlock Text="💰 Entradas do Mês"
+                                       Foreground="#CCCCCC"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,6"/>
+                            <TextBlock Text="{Binding TotalEntradasFormatado}"
+                                       Foreground="#4CAF50"
+                                       FontSize="20"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SAÍDAS -->
+                    <Border Grid.Column="1"
+                            Background="#1F1F23"
+                            CornerRadius="6"
+                            Padding="16,12"
+                            Margin="4,0">
+                        <StackPanel>
+                            <TextBlock Text="💸 Saídas do Mês"
+                                       Foreground="#CCCCCC"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,6"/>
+                            <TextBlock Text="{Binding TotalSaidasFormatado}"
+                                       Foreground="#E53935"
+                                       FontSize="20"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- SALDO -->
+                    <Border Grid.Column="2"
+                            Background="#1F1F23"
+                            CornerRadius="6"
+                            Padding="16,12"
+                            Margin="8,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="📊 Saldo do Mês"
+                                       Foreground="#CCCCCC"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,0,6"/>
+                            <TextBlock Text="{Binding SaldoMesAtualFormatado}"
+                                       Foreground="{Binding CorSaldo}"
+                                       FontSize="20"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- FILTROS -->
+            <Border Grid.Row="2"
                     Background="#2A2A2E"
                     CornerRadius="8"
                     Padding="20"
@@ -246,16 +319,18 @@
                             <ComboBox x:Name="cbFiltroPeriodo"
                                       Style="{StaticResource DarkComboBox}"
                                       SelectionChanged="AplicarFiltros_Click">
-                                <ComboBoxItem Content="Todos" IsSelected="True"/>
+                                <ComboBoxItem Content="Todos"/>
                                 <ComboBoxItem Content="Hoje"/>
                                 <ComboBoxItem Content="Esta semana"/>
                                 <ComboBoxItem Content="Este mês"/>
                                 <ComboBoxItem Content="Este ano"/>
+                                <ComboBoxItem Content="---" IsEnabled="False"/>
+                                <!-- Meses específicos serão adicionados dinamicamente -->
                             </ComboBox>
                         </Border>
                     </StackPanel>
 
-                    <!-- BOTÃO LIMPAR FILTROS -->
+                    <!-- BOTÃO ATUALIZAR -->
                     <Button Grid.Column="4"
                             Content="🔄 Atualizar"
                             Background="#4CAF50"
@@ -288,7 +363,7 @@
             </Border>
 
             <!-- LISTA DE LANÇAMENTOS -->
-            <Border Grid.Row="2"
+            <Border Grid.Row="3"
                     Background="#2A2A2E"
                     CornerRadius="8"
                     Padding="0">

@@ -109,11 +109,32 @@ namespace FinanceApp.Views
                 return false;
             }
 
-            if (PainelParcelas.Visibility == Visibility.Visible && 
-                string.IsNullOrWhiteSpace(txtParcelas.Text))
+            if (PainelParcelas.Visibility == Visibility.Visible)
             {
-                ExibirMensagemErro("Informe o número de parcelas para pagamento no crédito.");
-                return false;
+                if (string.IsNullOrWhiteSpace(txtParcelaTotal.Text))
+                {
+                    ExibirMensagemErro("Informe o total de parcelas.");
+                    return false;
+                }
+
+                if (!int.TryParse(txtParcelaInicial.Text, out int inicial) || 
+                    !int.TryParse(txtParcelaTotal.Text, out int total))
+                {
+                    ExibirMensagemErro("Parcelas devem ser números válidos.");
+                    return false;
+                }
+
+                if (inicial > total)
+                {
+                    ExibirMensagemErro("A parcela inicial não pode ser maior que o total.");
+                    return false;
+                }
+
+                if (inicial < 1 || total < 1)
+                {
+                    ExibirMensagemErro("As parcelas devem ser maiores que zero.");
+                    return false;
+                }
             }
 
             return true;
@@ -216,7 +237,8 @@ namespace FinanceApp.Views
 
         private void LimparCampoParcelas()
         {
-            txtParcelas.Text = string.Empty;
+            txtParcelaInicial.Text = "1";
+            txtParcelaTotal.Text = string.Empty;
         }
 
         #endregion
@@ -240,7 +262,15 @@ namespace FinanceApp.Views
 
             var tipoLancamento = ExtrairTextoSemEmoji(itemTipoSelecionado.Content.ToString()!);
             var formaPagamento = ExtrairTextoSemEmoji(itemPagamentoSelecionado.Content.ToString()!);
-            var numeroParcelas = ObterNumeroParcelas();
+            
+            int parcelaTotal = 1;
+            int parcelaInicial = 1;
+
+            if (PainelParcelas.Visibility == Visibility.Visible)
+            {
+                parcelaTotal = int.Parse(txtParcelaTotal.Text);
+                parcelaInicial = int.Parse(txtParcelaInicial.Text);
+            }
 
             return new Lancamento
             {
@@ -249,7 +279,8 @@ namespace FinanceApp.Views
                 nr_valor = valor,
                 dt_dataLancamento = dpData.SelectedDate!.Value,
                 nm_formaPagamento = formaPagamento,
-                nr_parcelas = numeroParcelas,
+                nr_parcelas = parcelaTotal,
+                nr_parcelaInicial = parcelaInicial,
                 id_usuario = Session.UsuarioLogado!.id_usuario
             };
         }
@@ -257,16 +288,6 @@ namespace FinanceApp.Views
         private string ExtrairTextoSemEmoji(string textoCompleto)
         {
             return textoCompleto.Split(' ').LastOrDefault()?.Trim() ?? textoCompleto;
-        }
-
-        private int ObterNumeroParcelas()
-        {
-            if (PainelParcelas.Visibility == Visibility.Visible && 
-                int.TryParse(txtParcelas.Text, out int parcelas))
-            {
-                return parcelas;
-            }
-            return 1;
         }
 
         #endregion

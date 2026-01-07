@@ -21,5 +21,7 @@ namespace FinanceApp.Models
         public string nm_formaPagamento { get; set; } = string.Empty; // Debito / Credito
 
         public int nr_parcelas { get; set; } = 1;
+
+        public int nr_parcelaInicial { get; set; }
     }
 }

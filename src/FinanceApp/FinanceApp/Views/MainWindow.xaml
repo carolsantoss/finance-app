@@ -230,10 +230,10 @@
                                            VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <TextBlock Text="{Binding Saldo, StringFormat=R$ {0:N2}, FallbackValue='R$ 0,00'}"
+                            <TextBlock Text="{Binding SaldoMesAtualFormatado, FallbackValue='R$ 0,00'}"
                                        FontSize="28"
                                        FontWeight="Bold"
-                                       Foreground="#4CAF50"/>
+                                       Foreground="{Binding CorSaldo}"/>
 
                             <TextBlock Text="Atualizado agora"
                                        Foreground="#666666"
@@ -258,7 +258,7 @@
                                            VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <TextBlock Text="{Binding Entradas, StringFormat=R$ {0:N2}, FallbackValue='R$ 0,00'}"
+                            <TextBlock Text="{Binding TotalEntradasFormatado, FallbackValue='R$ 0,00'}"
                                        FontSize="28"
                                        FontWeight="Bold"
                                        Foreground="#00BCD4"/>
@@ -285,7 +285,7 @@
                                            VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <TextBlock Text="{Binding Saidas, StringFormat=R$ {0:N2}, FallbackValue='R$ 0,00'}"
+                            <TextBlock Text="{Binding TotalSaidasFormatado, FallbackValue='R$ 0,00'}"
                                        FontSize="28"
                                        FontWeight="Bold"
                                        Foreground="#E53935"/>
@@ -327,6 +327,77 @@
                             </Grid>
                         </Border>
                     </StackPanel>
+                </Border>
+
+                <!-- NOVOS CARTÕES DE SALDO -->
+                <Border Background="#2A2E35" 
+                        CornerRadius="8" 
+                        Padding="20" 
+                        Margin="0,0,0,20">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- ENTRADAS DO MÊS -->
+                        <Border Grid.Column="0"
+                                Background="#1F1F23"
+                                CornerRadius="6"
+                                Padding="16,12"
+                                Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="💰 Entradas do Mês"
+                                           Foreground="#CCCCCC"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding TotalEntradasFormatado}"
+                                           Foreground="#4CAF50"
+                                           FontSize="24"
+                                           FontWeight="Bold"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- SAÍDAS DO MÊS -->
+                        <Border Grid.Column="1"
+                                Background="#1F1F23"
+                                CornerRadius="6"
+                                Padding="16,12"
+                                Margin="4,0">
+                            <StackPanel>
+                                <TextBlock Text="💸 Saídas do Mês"
+                                           Foreground="#CCCCCC"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding TotalSaidasFormatado}"
+                                           Foreground="#E53935"
+                                           FontSize="24"
+                                           FontWeight="Bold"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- SALDO DO MÊS -->
+                        <Border Grid.Column="2"
+                                Background="#1F1F23"
+                                CornerRadius="6"
+                                Padding="16,12"
+                                Margin="8,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="📊 Saldo do Mês"
+                                           Foreground="#CCCCCC"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding SaldoMesAtualFormatado}"
+                                           Foreground="{Binding CorSaldo}"
+                                           FontSize="24"
+                                           FontWeight="Bold"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </Border>
 
             </StackPanel>

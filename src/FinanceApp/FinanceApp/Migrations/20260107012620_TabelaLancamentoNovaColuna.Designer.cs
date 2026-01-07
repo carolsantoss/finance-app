@@ -3,6 +3,7 @@ using System;
 using FinanceApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260107012620_TabelaLancamentoNovaColuna")]
+    partial class TabelaLancamentoNovaColuna
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,10 +46,10 @@ namespace FinanceApp.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("nr_parcelaInicial")
+                    b.Property<int>("nr_parcelas")
                         .HasColumnType("int");
 
-                    b.Property<int>("nr_parcelas")
+                    b.Property<int>("nr_parcelasRestantes")
                         .HasColumnType("int");
 
                     b.Property<decimal>("nr_valor")
