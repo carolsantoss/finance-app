@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DotNetEnv;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace FinanceApp.Data
@@ -7,10 +8,28 @@ namespace FinanceApp.Data
     {
         public AppDbContext CreateDbContext(string[] args = null)
         {
+            Env.Load();
+
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
-            var connectionString =
-                "server=localhost;port=3306;database=finance_app;user=root;password=Oliveir@1920;";
+            var server = Env.GetString("DB_SERVER", "localhost");
+            var port = Env.GetString("DB_PORT", "3306");
+            var database = Env.GetString("DB_DATABASE", "finance_app");
+            var user = Env.GetString("DB_USER", "root");
+            var password = Env.GetString("DB_PASSWORD", "");
+
+            var connectionStringBuilder = new MySqlConnector.MySqlConnectionStringBuilder
+            {
+                Server = server,
+                Port = uint.Parse(port),
+                Database = database,
+                UserID = user,
+                Password = password,
+                AllowUserVariables = true,
+                UseCompression = true
+            };
+
+            var connectionString = connectionStringBuilder.ConnectionString;
 
             optionsBuilder.UseMySql(
                 connectionString,

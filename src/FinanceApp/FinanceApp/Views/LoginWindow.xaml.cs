@@ -1,7 +1,6 @@
 ﻿using FinanceApp.Data;
 using FinanceApp.Helpers;
 using FinanceApp.ViewModels;
-using Microsoft.EntityFrameworkCore;
 using System.Windows;
 
 namespace FinanceApp.Views
@@ -15,22 +14,13 @@ namespace FinanceApp.Views
         {
             InitializeComponent();
 
-            _context = new AppDbContext(
-                new DbContextOptionsBuilder<AppDbContext>()
-                    .UseMySql(
-                        "server=localhost;database=finance_app;user=root;password=Oliveir@1920",
-                        ServerVersion.AutoDetect(
-                            "server=localhost;database=finance_app;user=root;password=Oliveir@1920"
-                        )
-                    ).Options
-            );
+            _context = new AppDbContextFactory().CreateDbContext();
         }
 
         private void TogglePasswordVisibility_Click(object sender, RoutedEventArgs e)
         {
             if (_isPasswordVisible)
             {
-                // Esconder senha
                 PasswordBox.Password = PasswordTextBox.Text;
                 PasswordBox.Visibility = Visibility.Visible;
                 PasswordTextBox.Visibility = Visibility.Collapsed;
@@ -39,7 +29,6 @@ namespace FinanceApp.Views
             }
             else
             {
-                // Mostrar senha
                 PasswordTextBox.Text = PasswordBox.Password;
                 PasswordBox.Visibility = Visibility.Collapsed;
                 PasswordTextBox.Visibility = Visibility.Visible;
@@ -54,7 +43,6 @@ namespace FinanceApp.Views
         {
             if (Session.UsuarioLogado == null)
             {
-                // Garante que pegamos a senha do campo correto
                 string senha = _isPasswordVisible ? PasswordTextBox.Text : PasswordBox.Password;
 
                 var vm = new LoginViewModel
