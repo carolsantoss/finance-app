@@ -23,7 +23,7 @@ namespace FinanceApp.Views
 
         #endregion
 
-        #region Propriedades Públicas
+        #region Propriedade  Publicas
 
         public int TotalLancamentos
         {
@@ -72,7 +72,7 @@ namespace FinanceApp.Views
         public string SaldoMesAtualFormatado => SaldoMesAtual.ToString("C2", CultureInfo.GetCultureInfo("pt-BR"));
         public string TotalEntradasFormatado => TotalEntradas.ToString("C2", CultureInfo.GetCultureInfo("pt-BR"));
         public string TotalSaidasFormatado => TotalSaidas.ToString("C2", CultureInfo.GetCultureInfo("pt-BR"));
-        
+
         public string CorSaldo => SaldoMesAtual >= 0 ? "#4CAF50" : "#E53935";
 
         #endregion
@@ -83,11 +83,10 @@ namespace FinanceApp.Views
         {
             InitializeComponent();
             DataContext = this;
-            
-            PopularAnosFiltro();
 
+            PopularAnosFiltro();
             DefinirFiltroPadrao();
-            
+
             CarregarLancamentos();
         }
 
@@ -123,7 +122,7 @@ namespace FinanceApp.Views
         private void PopularAnosFiltro()
         {
             int anoAtual = DateTime.Now.Year;
-            
+
             for (int ano = anoAtual - 5; ano <= anoAtual + 2; ano++)
             {
                 var item = new ComboBoxItem
@@ -132,7 +131,7 @@ namespace FinanceApp.Views
                     Tag = ano
                 };
                 cbFiltroAno.Items.Add(item);
-                
+
                 if (ano == anoAtual)
                 {
                     cbFiltroAno.SelectedItem = item;
@@ -142,13 +141,20 @@ namespace FinanceApp.Views
 
         private void DefinirFiltroPadrao()
         {
+            int mesAtual = DateTime.Now.Month;
+
             foreach (ComboBoxItem item in cbFiltroMes.Items)
             {
-                if (item.Content.ToString() == "Todos")
+                if (item.Tag != null && int.TryParse(item.Tag.ToString(), out int mesTag) && mesTag == mesAtual)
                 {
                     cbFiltroMes.SelectedItem = item;
-                    break;
+                    return;
                 }
+            }
+
+            if (cbFiltroMes.Items.Count > 0)
+            {
+                cbFiltroMes.SelectedIndex = 0;
             }
         }
 
@@ -165,13 +171,13 @@ namespace FinanceApp.Views
                 .AsQueryable();
 
             query = AplicarFiltroTipo(query);
-            
+
             var lancamentos = query
                 .OrderByDescending(l => l.dt_dataLancamento)
                 .ToList();
 
             var lancamentosExpandidos = ExpandirLancamentosParcelados(lancamentos);
-            
+
             var lancamentosFiltrados = AplicarFiltroPeriodoEmLista(lancamentosExpandidos);
 
             CalcularSaldoPeriodo(lancamentosFiltrados);
@@ -195,9 +201,19 @@ namespace FinanceApp.Views
         private Lancamento CriarParcelaVirtual(Lancamento lancamentoOriginal, int numeroParcela)
         {
             int numeroParcelaReal = lancamentoOriginal.nr_parcelaInicial + numeroParcela - 1;
-            
-            decimal valorPorParcela = lancamentoOriginal.nr_valor / lancamentoOriginal.nr_parcelas;
-            
+
+            // Se começou da primeira parcela, divide o valor pelo total de parcelas
+            // Caso contrário, cada parcela tem o valor total informado
+            decimal valorPorParcela;
+            if (lancamentoOriginal.nr_parcelaInicial == 1)
+            {
+                valorPorParcela = lancamentoOriginal.nr_valor / lancamentoOriginal.nr_parcelas;
+            }
+            else
+            {
+                valorPorParcela = lancamentoOriginal.nr_valor;
+            }
+
             return new Lancamento
             {
                 id_lancamento = lancamentoOriginal.id_lancamento * 1000 + numeroParcela,
@@ -226,7 +242,7 @@ namespace FinanceApp.Views
                 if (lancamento.nr_parcelas > 1 && lancamento.nr_parcelaInicial <= lancamento.nr_parcelas)
                 {
                     int parcelasRestantes = ObterQuantidadeParcelasRestantes(lancamento);
-                    
+
                     for (int i = 1; i <= parcelasRestantes; i++)
                     {
                         var parcelaVirtual = CriarParcelaVirtual(lancamento, i);
@@ -263,43 +279,18 @@ namespace FinanceApp.Views
                 return lancamentos;
 
             var itemSelecionado = cbFiltroMes.SelectedItem as ComboBoxItem;
-            var periodoSelecionado = itemSelecionado?.Content.ToString();
             var mesSelecionadoTag = itemSelecionado?.Tag?.ToString();
-            var dataAtual = DateTime.Now;
-
-            if (periodoSelecionado == "Todos")
-            {
-                if (cbFiltroAno?.SelectedItem is ComboBoxItem anoItem && anoItem.Tag != null)
-                {
-                    int anoSelecionado = (int)anoItem.Tag;
-                    return lancamentos.Where(l => l.dt_dataLancamento.Year == anoSelecionado).ToList();
-                }
-                return lancamentos;
-            }
-            
-            if (periodoSelecionado == "Hoje")
-                return lancamentos.Where(l => l.dt_dataLancamento.Date == dataAtual.Date).ToList();
-            
-            if (periodoSelecionado == "Esta semana")
-                return lancamentos.Where(l => l.dt_dataLancamento >= dataAtual.AddDays(-7)).ToList();
-            
-            if (periodoSelecionado == "Este mês" || mesSelecionadoTag == "EsteMes")
-                return lancamentos.Where(l => l.dt_dataLancamento.Month == dataAtual.Month &&
-                                             l.dt_dataLancamento.Year == dataAtual.Year).ToList();
-            
-            if (periodoSelecionado == "Este ano" || mesSelecionadoTag == "EsteAno")
-                return lancamentos.Where(l => l.dt_dataLancamento.Year == dataAtual.Year).ToList();
 
             if (!string.IsNullOrEmpty(mesSelecionadoTag) && int.TryParse(mesSelecionadoTag, out int mesNumero))
             {
-                int anoSelecionado = dataAtual.Year;
-                
+                int anoSelecionado = DateTime.Now.Year;
+
                 if (cbFiltroAno?.SelectedItem is ComboBoxItem anoItem && anoItem.Tag != null)
                 {
                     anoSelecionado = (int)anoItem.Tag;
                 }
 
-                return lancamentos.Where(l => 
+                return lancamentos.Where(l =>
                     l.dt_dataLancamento.Month == mesNumero &&
                     l.dt_dataLancamento.Year == anoSelecionado).ToList();
             }
@@ -402,12 +393,12 @@ namespace FinanceApp.Views
                 var descricao = _lancamento.nm_descricao;
                 var inicioParenteses = descricao.LastIndexOf('(');
                 var fimParenteses = descricao.LastIndexOf(')');
-                
+
                 if (inicioParenteses >= 0 && fimParenteses > inicioParenteses)
                 {
                     return descricao.Substring(inicioParenteses + 1, fimParenteses - inicioParenteses - 1);
                 }
-                
+
                 return "-";
             }
         }

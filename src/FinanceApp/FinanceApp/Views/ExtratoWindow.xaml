@@ -329,12 +329,6 @@
                             <ComboBox x:Name="cbFiltroMes"
                                       Style="{StaticResource DarkComboBox}"
                                       SelectionChanged="AplicarFiltros_Click">
-                                <ComboBoxItem Content="Todos" IsSelected="True"/>
-                                <ComboBoxItem Content="Hoje"/>
-                                <ComboBoxItem Content="Esta semana"/>
-                                <ComboBoxItem Content="Este mês" Tag="EsteMes"/>
-                                <ComboBoxItem Content="Este ano" Tag="EsteAno"/>
-                                <ComboBoxItem Content="---" IsEnabled="False"/>
                                 <ComboBoxItem Content="Janeiro" Tag="1"/>
                                 <ComboBoxItem Content="Fevereiro" Tag="2"/>
                                 <ComboBoxItem Content="Março" Tag="3"/>
