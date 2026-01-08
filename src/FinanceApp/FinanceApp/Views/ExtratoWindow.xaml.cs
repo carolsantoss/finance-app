@@ -200,10 +200,8 @@ namespace FinanceApp.Views
 
         private Lancamento CriarParcelaVirtual(Lancamento lancamentoOriginal, int numeroParcela)
         {
-            int numeroParcelaReal = lancamentoOriginal.nr_parcelaInicial + numeroParcela - 1;
+            int numeroParcelaReal = numeroParcela;
 
-            // Se começou da primeira parcela, divide o valor pelo total de parcelas
-            // Caso contrário, cada parcela tem o valor total informado
             decimal valorPorParcela;
             if (lancamentoOriginal.nr_parcelaInicial == 1)
             {
@@ -213,6 +211,8 @@ namespace FinanceApp.Views
             {
                 valorPorParcela = lancamentoOriginal.nr_valor;
             }
+
+            int mesesParaAjustar = numeroParcela - lancamentoOriginal.nr_parcelaInicial;
 
             return new Lancamento
             {
@@ -224,13 +224,8 @@ namespace FinanceApp.Views
                 nr_valor = valorPorParcela,
                 nr_parcelas = lancamentoOriginal.nr_parcelas,
                 nr_parcelaInicial = lancamentoOriginal.nr_parcelaInicial,
-                dt_dataLancamento = lancamentoOriginal.dt_dataLancamento.AddMonths(numeroParcela - 1)
+                dt_dataLancamento = lancamentoOriginal.dt_dataLancamento.AddMonths(mesesParaAjustar)
             };
-        }
-
-        private int ObterQuantidadeParcelasRestantes(Lancamento lancamento)
-        {
-            return lancamento.nr_parcelas - lancamento.nr_parcelaInicial + 1;
         }
 
         private List<Lancamento> ExpandirLancamentosParcelados(List<Lancamento> lancamentos)
@@ -239,11 +234,9 @@ namespace FinanceApp.Views
 
             foreach (var lancamento in lancamentos)
             {
-                if (lancamento.nr_parcelas > 1 && lancamento.nr_parcelaInicial <= lancamento.nr_parcelas)
+                if (lancamento.nr_parcelas > 1)
                 {
-                    int parcelasRestantes = ObterQuantidadeParcelasRestantes(lancamento);
-
-                    for (int i = 1; i <= parcelasRestantes; i++)
+                    for (int i = 1; i <= lancamento.nr_parcelas; i++)
                     {
                         var parcelaVirtual = CriarParcelaVirtual(lancamento, i);
                         lancamentosExpandidos.Add(parcelaVirtual);

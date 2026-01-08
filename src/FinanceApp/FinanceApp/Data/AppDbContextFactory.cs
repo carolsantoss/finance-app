@@ -1,6 +1,7 @@
 ﻿using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using System.IO;
 
 namespace FinanceApp.Data
 {
@@ -8,7 +9,21 @@ namespace FinanceApp.Data
     {
         public AppDbContext CreateDbContext(string[] args = null)
         {
-            Env.Load();
+            var projectDirectory = Directory.GetCurrentDirectory();
+            var envPath = Path.Combine(projectDirectory, ".env");
+            
+            if (File.Exists(envPath))
+            {
+                Env.Load(envPath);
+            }
+            else
+            {
+                var parentEnvPath = Path.Combine(Directory.GetParent(projectDirectory)?.Parent?.Parent?.FullName ?? "", ".env");
+                if (File.Exists(parentEnvPath))
+                {
+                    Env.Load(parentEnvPath);
+                }
+            }
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
