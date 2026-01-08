@@ -1,11 +1,26 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useFinanceStore } from '../stores/finance';
+import { 
+    LayoutDashboard, 
+    Wallet, 
+    TrendingUp, 
+    TrendingDown, 
+    LogOut, 
+    Plus, 
+    Search,
+    Bell,
+    Settings,
+    Menu,
+    X
+} from 'lucide-vue-next';
+import FinanceChart from '../components/FinanceChart.vue';
 
 const auth = useAuthStore();
 const finance = useFinanceStore();
 
+const isSidebarOpen = ref(false);
 const showForm = ref(false);
 const newTransaction = ref({
   nm_tipo: 'Entrada',
@@ -20,110 +35,201 @@ onMounted(() => {
 });
 
 const handleAdd = async () => {
-  await finance.addTransaction(newTransaction.value);
-  showForm.value = false;
-  newTransaction.value = { nm_tipo: 'Entrada', nm_descricao: '', nr_valor: 0, dt_dataLancamento: new Date().toISOString().split('T')[0] };
+    // Add logic here
+    await finance.addTransaction(newTransaction.value);
+    showForm.value = false;
 };
 
-const handleDelete = async (id: number) => {
-  if(confirm('Tem certeza?')) {
-    await finance.deleteTransaction(id);
-  }
+// Formatter
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-800">FinanceApp</h1>
-      <div class="flex items-center gap-4">
-        <span>Olá, {{ auth.user?.nomeUsuario }}</span>
-        <button @click="auth.logout" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Sair</button>
-      </div>
-    </div>
+    <div class="flex h-screen bg-gray-900 text-gray-100 font-sans overflow-hidden">
+        
+        <!-- Sidebar (Desktop) -->
+        <aside class="hidden md:flex flex-col w-64 bg-gray-800 border-r border-gray-700">
+            <div class="p-6 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                    <Wallet class="text-white w-6 h-6" />
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight">Finance</h1>
+            </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
-        <h3 class="text-gray-500 text-sm font-semibold">Entradas</h3>
-        <p class="text-2xl font-bold text-green-600">R$ {{ finance.summary.entradas.toFixed(2) }}</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500">
-        <h3 class="text-gray-500 text-sm font-semibold">Saídas</h3>
-        <p class="text-2xl font-bold text-red-600">R$ {{ finance.summary.saidas.toFixed(2) }}</p>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
-        <h3 class="text-gray-500 text-sm font-semibold">Saldo</h3>
-        <p class="text-2xl font-bold text-blue-600">R$ {{ finance.summary.saldo.toFixed(2) }}</p>
-      </div>
-    </div>
+            <nav class="flex-1 px-4 py-4 space-y-2">
+                <a href="#" class="flex items-center gap-3 px-4 py-3 bg-blue-600/10 text-blue-400 rounded-lg border border-blue-600/20">
+                    <LayoutDashboard class="w-5 h-5" />
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors">
+                    <TrendingUp class="w-5 h-5" />
+                    <span>Receitas</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors">
+                    <TrendingDown class="w-5 h-5" />
+                    <span>Despesas</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors">
+                    <Settings class="w-5 h-5" />
+                    <span>Ajustes</span>
+                </a>
+            </nav>
 
-    <!-- Actions -->
-    <div class="mb-6">
-        <button @click="showForm = !showForm" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            {{ showForm ? 'Fechar' : 'Nova Transação' }}
-        </button>
-    </div>
+            <div class="p-4 border-t border-gray-700">
+                <button @click="auth.logout" class="flex items-center gap-3 px-4 py-3 w-full text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
+                    <LogOut class="w-5 h-5" />
+                    <span>Sair</span>
+                </button>
+            </div>
+        </aside>
 
-    <!-- Form -->
-    <div v-if="showForm" class="bg-white p-6 rounded-lg shadow-md mb-8">
-        <form @submit.prevent="handleAdd" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Tipo</label>
-                <select v-model="newTransaction.nm_tipo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2">
-                    <option value="Entrada">Entrada</option>
-                    <option value="Saída">Saída</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Descrição</label>
-                <input v-model="newTransaction.nm_descricao" type="text" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" />
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Valor</label>
-                <input v-model.number="newTransaction.nr_valor" type="number" step="0.01" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" />
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Data</label>
-                <input v-model="newTransaction.dt_dataLancamento" type="date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2" />
-            </div>
-            <div class="md:col-span-2">
-                <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Salvar</button>
-            </div>
-        </form>
-    </div>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden relative">
+            <!-- Header -->
+            <header class="h-16 bg-gray-800/50 backdrop-blur-md border-b border-gray-700 flex items-center justify-between px-6 z-20">
+                <div class="flex items-center gap-4">
+                    <button class="md:hidden text-gray-400" @click="isSidebarOpen = true">
+                        <Menu class="w-6 h-6" />
+                    </button>
+                    <div class="relative hidden sm:block">
+                        <Search class="absolute left-3 top-2.5 text-gray-500 w-4 h-4" />
+                        <input type="text" placeholder="Buscar..." class="bg-gray-900 border border-gray-700 rounded-full pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none w-64 transition-all" />
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="relative text-gray-400 hover:text-white transition-colors">
+                        <Bell class="w-5 h-5" />
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <div class="flex items-center gap-3 pl-4 border-l border-gray-700">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm font-medium text-white">{{ auth.user?.nomeUsuario }}</p>
+                            <p class="text-xs text-gray-400">Premium</p>
+                        </div>
+                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 border border-gray-500"></div>
+                    </div>
+                </div>
+            </header>
 
-    <!-- Transactions List -->
-    <div class="bg-white shadow-md rounded-lg overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          <tr v-for="item in finance.transactions" :key="item.id_lancamento">
-            <td class="px-6 py-4 whitespace-nowrap">{{ new Date(item.dt_dataLancamento).toLocaleDateString() }}</td>
-            <td class="px-6 py-4">{{ item.nm_descricao }}</td>
-            <td class="px-6 py-4">
-                <span :class="item.nm_tipo.includes('Entrada') ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                    {{ item.nm_tipo }}
-                </span>
-            </td>
-            <td class="px-6 py-4 font-bold" :class="item.nm_tipo.includes('Entrada') ? 'text-green-600' : 'text-red-600'">
-                R$ {{ item.nr_valor.toFixed(2) }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button @click="handleDelete(item.id_lancamento)" class="text-red-600 hover:text-red-900">Excluir</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Welcome Section -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold">Visão Geral</h2>
+                        <p class="text-gray-400">Resumo financeiro dos últimos 30 dias.</p>
+                    </div>
+                    <button @click="showForm = true" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-blue-500/20 transition-all font-medium">
+                        <Plus class="w-5 h-5" />
+                        Nova Transação
+                    </button>
+                </div>
+
+                <!-- Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group">
+                        <div class="absolute right-[-20px] top-[-20px] w-24 h-24 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/30 transition-all"></div>
+                        <div class="relative z-10">
+                            <p class="text-gray-400 font-medium mb-1">Saldo Total</p>
+                            <h3 class="text-3xl font-bold text-white">{{ formatCurrency(finance.summary.saldo) }}</h3>
+                            <div class="mt-4 flex items-center text-sm text-green-400">
+                                <TrendingUp class="w-4 h-4 mr-1" />
+                                <span>+12.5% vs mês anterior</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group">
+                        <div class="absolute right-[-20px] top-[-20px] w-24 h-24 bg-green-500/20 rounded-full blur-2xl group-hover:bg-green-500/30 transition-all"></div>
+                        <div class="relative z-10">
+                            <p class="text-gray-400 font-medium mb-1">Entradas</p>
+                            <h3 class="text-3xl font-bold text-white">{{ formatCurrency(finance.summary.entradas) }}</h3>
+                            <div class="mt-4 flex items-center text-sm text-gray-400">
+                                <span>Total recebido</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl relative overflow-hidden group">
+                        <div class="absolute right-[-20px] top-[-20px] w-24 h-24 bg-red-500/20 rounded-full blur-2xl group-hover:bg-red-500/30 transition-all"></div>
+                        <div class="relative z-10">
+                            <p class="text-gray-400 font-medium mb-1">Saídas</p>
+                            <h3 class="text-3xl font-bold text-white">{{ formatCurrency(finance.summary.saidas) }}</h3>
+                             <div class="mt-4 flex items-center text-sm text-gray-400">
+                                <span>Total gasto</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold">Fluxo de Caixa</h3>
+                        <select class="bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg p-2 focus:ring-blue-500">
+                            <option>Últimos 6 meses</option>
+                            <option>Este ano</option>
+                        </select>
+                    </div>
+                    <FinanceChart />
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="bg-gray-800 rounded-2xl border border-gray-700 shadow-xl overflow-hidden">
+                    <div class="p-6 border-b border-gray-700">
+                        <h3 class="text-lg font-bold">Transações Recentes</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-400">
+                            <thead class="bg-gray-900/50 text-xs uppercase font-medium">
+                                <tr>
+                                    <th class="px-6 py-4">Data</th>
+                                    <th class="px-6 py-4">Descrição</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4 text-right">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700">
+                                <tr v-for="item in finance.transactions" :key="item.id_lancamento" class="hover:bg-gray-700/30 transition-colors">
+                                    <td class="px-6 py-4">{{ new Date(item.dt_dataLancamento).toLocaleDateString() }}</td>
+                                    <td class="px-6 py-4 font-medium text-white">{{ item.nm_descricao }}</td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2.5 py-0.5 rounded-full text-xs font-medium border"
+                                            :class="item.nm_tipo.includes('Entrada') 
+                                                ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                                                : 'bg-red-500/10 text-red-400 border-red-500/20'">
+                                            {{ item.nm_tipo }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-bold"
+                                        :class="item.nm_tipo.includes('Entrada') ? 'text-green-400' : 'text-red-400'">
+                                        {{ item.nm_tipo.includes('Saída') ? '-' : '+' }} {{ formatCurrency(item.nr_valor) }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Mobile Sidebar Overlay (Simple Implementation) -->
+        <div v-if="isSidebarOpen" class="fixed inset-0 bg-black/50 z-40 md:hidden" @click="isSidebarOpen = false"></div>
+        <aside v-if="isSidebarOpen" class="fixed inset-y-0 left-0 w-64 bg-gray-800 z-50 p-6 md:hidden shadow-2xl transition-transform">
+             <div class="flex justify-between items-center mb-8">
+                 <h2 class="text-xl font-bold">Menu</h2>
+                 <button @click="isSidebarOpen = false"><X class="w-6 h-6" /></button>
+             </div>
+             <!-- Mobile Nav Links -->
+              <nav class="space-y-4">
+                <a href="#" class="block text-gray-300">Dashboard</a>
+                <a href="#" class="block text-gray-300">Receitas</a>
+                <a href="#" class="block text-gray-300">Despesas</a>
+                <button @click="auth.logout" class="block text-red-400 mt-8">Sair</button>
+            </nav>
+        </aside>
+
     </div>
-  </div>
 </template>

@@ -1,11 +1,20 @@
 import axios from 'axios';
+import { setupMock } from './mock';
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api', // Assume API is running on port 5000
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
     headers: {
         'Content-Type': 'application/json'
     }
 });
+
+// Conditionally enable Mock Adapter
+// Forcing true for now as per user request to "not connect to backend"
+const useMock = true; // import.meta.env.VITE_USE_MOCK === 'true';
+
+if (useMock) {
+    setupMock(api);
+}
 
 api.interceptors.request.use(config => {
     const token = localStorage.getItem('token');
