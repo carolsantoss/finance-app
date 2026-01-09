@@ -30,95 +30,108 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-    <div class="min-h-screen flex items-center justify-center bg-gray-900 relative overflow-hidden font-sans">
-        <!-- Abstract Animated Background -->
-        <div class="absolute inset-0 z-0">
-            <div class="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-            <div class="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-            <div class="absolute bottom-[-20%] left-[20%] w-[600px] h-[600px] bg-pink-600 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+    <div class="min-h-screen bg-black text-white flex items-center justify-center p-4 font-sans selection:bg-white/20">
+        <!-- Subtle Ambient Glow -->
+        <div class="fixed inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 via-black to-black opacity-40"></div>
         </div>
 
-        <!-- Glass Card -->
-        <div class="relative z-10 w-full max-w-md p-8 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-2xl">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 mb-4 shadow-lg">
-                    <Lock class="w-8 h-8 text-white" />
+        <div class="w-full max-w-[360px] z-10 relative animation-fade-in">
+            <!-- Minimal Header -->
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 mb-6 shadow-xl">
+                    <Wallet class="w-5 h-5 text-white/90" />
                 </div>
-                <h2 class="text-3xl font-bold text-white tracking-tight">FinanceApp</h2>
-                <p class="text-gray-300 mt-2 text-sm">Gerencie suas finanças com elegância.</p>
+                <h1 class="text-2xl font-semibold tracking-tight text-white mb-2">
+                    {{ isRegister ? 'Criar conta' : 'Bem-vindo de volta' }}
+                </h1>
+                <p class="text-zinc-500 text-sm">
+                    {{ isRegister ? 'Preencha os dados para começar.' : 'Digite suas credenciais para acessar.' }}
+                </p>
             </div>
 
-            <form @submit.prevent="handleSubmit" class="space-y-6">
-                <div v-if="isRegister" class="relative group">
-                    <User class="absolute left-3 top-3 text-gray-400 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
-                    <input 
-                        type="text" 
-                        v-model="name" 
-                        placeholder="Nome Completo" 
-                        class="w-full bg-gray-800/50 border border-gray-700 text-white rounded-lg pl-10 pr-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-500"
-                        required
-                    />
+            <!-- Form -->
+            <form @submit.prevent="handleSubmit" class="space-y-4">
+                <div v-if="isRegister" class="space-y-1.5">
+                    <label class="text-[11px] uppercase tracking-wider font-semibold text-zinc-500">Nome</label>
+                    <div class="relative group">
+                        <User class="absolute left-3 top-2.5 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors duration-300" />
+                        <input 
+                            v-model="name"
+                            type="text" 
+                            class="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 focus:bg-zinc-900 transition-all duration-300"
+                            placeholder="Seu nome completo"
+                            required
+                        />
+                    </div>
                 </div>
 
-                <div class="relative group">
-                    <User class="absolute left-3 top-3 text-gray-400 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
-                    <input 
-                        type="email" 
-                        v-model="email" 
-                        placeholder="Seu Email" 
-                        class="w-full bg-gray-800/50 border border-gray-700 text-white rounded-lg pl-10 pr-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-500"
-                        required
-                    />
+                <div class="space-y-1.5">
+                    <label class="text-[11px] uppercase tracking-wider font-semibold text-zinc-500">Email</label>
+                    <div class="relative group">
+                        <User class="absolute left-3 top-2.5 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors duration-300" />
+                        <input 
+                            v-model="email"
+                            type="email" 
+                            class="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 focus:bg-zinc-900 transition-all duration-300"
+                            placeholder="exemplo@email.com"
+                            required
+                        />
+                    </div>
                 </div>
-
-                <div class="relative group">
-                    <Lock class="absolute left-3 top-3 text-gray-400 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
-                    <input 
-                        type="password" 
-                        v-model="password" 
-                        placeholder="Sua Senha" 
-                        class="w-full bg-gray-800/50 border border-gray-700 text-white rounded-lg pl-10 pr-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-gray-500"
-                        required
-                    />
+                
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <label class="text-[11px] uppercase tracking-wider font-semibold text-zinc-500">Senha</label>
+                        <a v-if="!isRegister" href="#" class="text-[11px] text-zinc-500 hover:text-white transition-colors">Esqueceu?</a>
+                    </div>
+                    <div class="relative group">
+                        <Lock class="absolute left-3 top-2.5 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors duration-300" />
+                        <input 
+                            v-model="password"
+                            type="password" 
+                            class="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 focus:bg-zinc-900 transition-all duration-300"
+                            placeholder="••••••••"
+                            required
+                        />
+                    </div>
                 </div>
 
                 <button 
-                    type="submit" 
+                    type="submit"
                     :disabled="isLoading"
-                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="w-full bg-white hover:bg-zinc-200 text-black font-medium text-sm py-2.5 rounded-lg transition-all duration-300 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                 >
-                    <div v-if="isLoading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span v-else>{{ isRegister ? 'Criar Conta' : 'Acessar Painel' }}</span>
-                    <ArrowRight v-if="!isLoading" class="w-4 h-4" />
+                    <span v-if="isLoading" class="flex items-center justify-center gap-2">
+                        <div class="w-3 h-3 border-2 border-zinc-400 border-t-black rounded-full animate-spin"></div>
+                        Processando...
+                    </span>
+                    <span v-else>{{ isRegister ? 'Cadastrar' : 'Entrar' }}</span>
                 </button>
             </form>
 
-            <div class="mt-6 text-center">
-                <button 
-                    @click="isRegister = !isRegister"
-                    class="text-sm text-gray-400 hover:text-white transition-colors"
-                >
-                    {{ isRegister ? 'Já possui conta? Entrar' : 'Não tem conta? Cadastre-se' }}
-                </button>
+            <div class="mt-8 text-center">
+                <p class="text-xs text-zinc-600">
+                    {{ isRegister ? 'Já possui uma conta?' : 'Não tem uma conta?' }}
+                    <button 
+                        @click="isRegister = !isRegister" 
+                        class="text-zinc-400 hover:text-white ml-1 font-medium transition-colors underline decoration-zinc-800 underline-offset-4 hover:decoration-white"
+                    >
+                        {{ isRegister ? 'Fazer login' : 'Criar agora' }}
+                    </button>
+                </p>
             </div>
         </div>
     </div>
 </template>
 
 <style scoped>
-@keyframes blob {
-    0% { transform: translate(0px, 0px) scale(1); }
-    33% { transform: translate(30px, -50px) scale(1.1); }
-    66% { transform: translate(-20px, 20px) scale(0.9); }
-    100% { transform: translate(0px, 0px) scale(1); }
+.animation-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
 }
-.animate-blob {
-    animation: blob 7s infinite;
-}
-.animation-delay-2000 {
-    animation-delay: 2s;
-}
-.animation-delay-4000 {
-    animation-delay: 4s;
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
