@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="FinanceApp/FinanceApp.csproj" />
+  <Project Path="../FinanceApp.Shared/FinanceApp.Shared.csproj" />
+  <Project Path="../FinanceApp.API/FinanceApp.API.csproj" />
 </Solution>
