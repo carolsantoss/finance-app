@@ -47,11 +47,22 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     const authStore = useAuthStore();
-    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-        next('/login');
-    } else {
-        next();
+
+    // Check if any of the matched routes requires auth
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+        if (!authStore.isAuthenticated) {
+            next('/login');
+            return;
+        }
     }
+
+    // Redirect logic for logged in users trying to access login/register
+    if ((to.name === 'Login' || to.name === 'Register') && authStore.isAuthenticated) {
+        next('/');
+        return;
+    }
+
+    next();
 });
 
 export default router;

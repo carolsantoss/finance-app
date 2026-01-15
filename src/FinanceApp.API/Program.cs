@@ -57,8 +57,6 @@ var connectionString = $"Server={Environment.GetEnvironmentVariable("DB_SERVER")
                        $"Pwd='{Environment.GetEnvironmentVariable("DB_PASSWORD") ?? ""}';" +
                        "AllowUserVariables=True;UseCompression=True;";
 
-Console.WriteLine($"[INFO] Connection String: {connectionString}");
-
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 

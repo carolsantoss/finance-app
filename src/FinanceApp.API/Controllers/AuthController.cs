@@ -35,12 +35,13 @@ namespace FinanceApp.API.Controllers
                 return Unauthorized("Email ou senha inválidos");
             }
 
-            var token = GenerateToken(user);
+            var token = GenerateToken(user, request.RememberMe);
 
             return Ok(new LoginResponse
             {
                 Token = token,
-                NomeUsuario = user.nm_nomeUsuario
+                NomeUsuario = user.nm_nomeUsuario,
+                Email = user.nm_email
             });
         }
 
@@ -67,11 +68,12 @@ namespace FinanceApp.API.Controllers
             return Ok(new LoginResponse
             {
                 Token = token,
-                NomeUsuario = user.nm_nomeUsuario
+                NomeUsuario = user.nm_nomeUsuario,
+                Email = user.nm_email
             });
         }
 
-        private string GenerateToken(User user)
+        private string GenerateToken(User user, bool rememberMe = false)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
@@ -83,7 +85,7 @@ namespace FinanceApp.API.Controllers
                     new Claim(ClaimTypes.Name, user.nm_nomeUsuario),
                     new Claim(ClaimTypes.Email, user.nm_email)
                 }),
-                Expires = DateTime.UtcNow.AddDays(7),
+                Expires = DateTime.UtcNow.AddDays(rememberMe ? 30 : 7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"]

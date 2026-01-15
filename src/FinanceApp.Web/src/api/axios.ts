@@ -1,16 +1,17 @@
+/// <reference types="vite/client" />
 import axios from 'axios';
 import { setupMock } from './mock';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5097/api',
     headers: {
         'Content-Type': 'application/json'
     }
 });
 
 // Conditionally enable Mock Adapter
-// Forcing true for now as per user request to "not connect to backend"
-const useMock = true; // import.meta.env.VITE_USE_MOCK === 'true';
+// Set to false to use real backend
+const useMock = false; // import.meta.env.VITE_USE_MOCK === 'true';
 
 if (useMock) {
     setupMock(api);

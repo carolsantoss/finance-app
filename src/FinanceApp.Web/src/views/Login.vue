@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
-import { User, Lock, ArrowRight } from 'lucide-vue-next';
+import { User, Lock, ArrowRight, Wallet } from 'lucide-vue-next';
 
 const auth = useAuthStore();
 const email = ref('');
 const password = ref('');
+const rememberMe = ref(false);
 const isLoading = ref(false);
 
 const handleSubmit = async () => {
@@ -13,7 +14,7 @@ const handleSubmit = async () => {
     try {
         // Simulate network delay for effect
         await new Promise(r => setTimeout(r, 800));
-        await auth.login({ email: email.value, senha: password.value });
+        await auth.login({ email: email.value, senha: password.value, rememberMe: rememberMe.value });
     } catch (error) {
         alert('Erro na autenticação. Tente novamente.');
     } finally {
@@ -68,6 +69,20 @@ const handleSubmit = async () => {
                              <!-- Eye Icon placeholder if needed, or just keep simple -->
                              <Lock class="w-4 h-4" />
                         </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input 
+                            id="remember-me" 
+                            v-model="rememberMe"
+                            type="checkbox" 
+                            class="h-4 w-4 text-[#00875F] focus:ring-[#00875F] border-[#323238] rounded bg-[#121214]" 
+                        />
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-400">
+                            Lembrar por 30 dias
+                        </label>
                     </div>
                 </div>
 
