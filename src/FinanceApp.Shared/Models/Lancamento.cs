@@ -23,5 +23,7 @@ namespace FinanceApp.Shared.Models
         public int nr_parcelas { get; set; } = 1;
 
         public int nr_parcelaInicial { get; set; }
+
+        public int nr_parcelasPagas { get; set; } = 0;
     }
 }

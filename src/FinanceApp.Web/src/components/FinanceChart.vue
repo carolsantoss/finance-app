@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -23,14 +24,22 @@ ChartJS.register(
   Filler
 )
 
-const data = {
-  labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'],
+const props = defineProps<{
+  chartData: {
+    labels: string[];
+    incomeData: number[];
+    expenseData: number[];
+  }
+}>();
+
+const data = computed(() => ({
+  labels: props.chartData?.labels || [],
   datasets: [
     {
       label: 'Entradas',
       backgroundColor: 'rgba(59, 130, 246, 0.2)', // Blue
       borderColor: '#3b82f6',
-      data: [4000, 3000, 5000, 4500, 6000, 5500, 7000],
+      data: props.chartData?.incomeData || [],
       fill: true,
       tension: 0.4
     },
@@ -38,12 +47,12 @@ const data = {
       label: 'Saídas',
       backgroundColor: 'rgba(239, 68, 68, 0.2)', // Red
       borderColor: '#ef4444',
-      data: [2500, 2000, 3500, 3000, 4000, 3500, 4500],
+      data: props.chartData?.expenseData || [],
       fill: true,
       tension: 0.4
     }
   ]
-}
+}));
 
 const options = {
   responsive: true,

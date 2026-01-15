@@ -9,7 +9,7 @@ using System.Security.Claims;
 namespace FinanceApp.API.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/lancamentos")]
     [ApiController]
     public class LancamentoController : ControllerBase
     {
@@ -25,14 +25,31 @@ namespace FinanceApp.API.Controllers
             return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
         }
 
+        private static LancamentoResponse ToDto(Lancamento l)
+        {
+            return new LancamentoResponse
+            {
+                Id = l.id_lancamento,
+                Tipo = l.nm_tipo,
+                Descricao = l.nm_descricao,
+                Valor = l.nr_valor,
+                DataLancamento = l.dt_dataLancamento,
+                FormaPagamento = l.nm_formaPagamento,
+                Parcelas = l.nr_parcelas,
+                ParcelasPagas = l.nr_parcelasPagas
+            };
+        }
+
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Lancamento>>> GetLancamentos()
+        public async Task<ActionResult<IEnumerable<LancamentoResponse>>> GetLancamentos()
         {
             var userId = GetUserId();
-            return await _context.lancamentos
+            var lancamentos = await _context.lancamentos
                 .Where(l => l.id_usuario == userId)
                 .OrderByDescending(l => l.dt_dataLancamento)
                 .ToListAsync();
+
+            return Ok(lancamentos.Select(ToDto));
         }
 
         [HttpGet("summary")]
@@ -42,9 +59,9 @@ namespace FinanceApp.API.Controllers
             var lancamentos = await _context.lancamentos
                 .Where(l => l.id_usuario == userId)
                 .ToListAsync();
-
-            var entradas = lancamentos.Where(l => l.nm_tipo.Contains("Entrada")).Sum(l => l.nr_valor);
-            var saidas = lancamentos.Where(l => l.nm_tipo.Contains("Saída")).Sum(l => l.nr_valor);
+            
+            var entradas = lancamentos.Where(l => l.nm_tipo == "Entrada").Sum(l => l.nr_valor);
+            var saidas = lancamentos.Where(l => l.nm_tipo == "Saída").Sum(l => l.nr_valor);
 
             return Ok(new DashboardSummary
             {
@@ -53,8 +70,47 @@ namespace FinanceApp.API.Controllers
             });
         }
 
+        [HttpGet("chart")]
+        public async Task<ActionResult<ChartDataResponse>> GetChartData()
+        {
+            var userId = GetUserId();
+            var today = DateTime.Today;
+            var sixMonthsAgo = today.AddMonths(-5);
+            var startDate = new DateTime(sixMonthsAgo.Year, sixMonthsAgo.Month, 1);
+
+            var lancamentos = await _context.lancamentos
+                .Where(l => l.id_usuario == userId && l.dt_dataLancamento >= startDate)
+                .ToListAsync();
+
+            var monthlyData = new List<MonthlyFinancialData>();
+
+            for (int i = 0; i < 6; i++)
+            {
+                var currentMonth = startDate.AddMonths(i);
+                var monthName = currentMonth.ToString("MMM", new System.Globalization.CultureInfo("pt-BR"));
+                
+                var monthLancamentos = lancamentos
+                    .Where(l => l.dt_dataLancamento.Year == currentMonth.Year && l.dt_dataLancamento.Month == currentMonth.Month)
+                    .ToList();
+
+                monthlyData.Add(new MonthlyFinancialData
+                {
+                    Month = char.ToUpper(monthName[0]) + monthName.Substring(1),
+                    Income = monthLancamentos.Where(l => l.nm_tipo == "Entrada").Sum(l => l.nr_valor),
+                    Expense = monthLancamentos.Where(l => l.nm_tipo == "Saída").Sum(l => l.nr_valor)
+                });
+            }
+
+            return Ok(new ChartDataResponse
+            {
+                Labels = monthlyData.Select(d => d.Month).ToList(),
+                IncomeData = monthlyData.Select(d => d.Income).ToList(),
+                ExpenseData = monthlyData.Select(d => d.Expense).ToList()
+            });
+        }
+
         [HttpGet("{id}")]
-        public async Task<ActionResult<Lancamento>> GetLancamento(int id)
+        public async Task<ActionResult<LancamentoResponse>> GetLancamento(int id)
         {
             var userId = GetUserId();
             var lancamento = await _context.lancamentos
@@ -65,29 +121,36 @@ namespace FinanceApp.API.Controllers
                 return NotFound();
             }
 
-            return lancamento;
+            return Ok(ToDto(lancamento));
         }
 
         [HttpPost]
-        public async Task<ActionResult<Lancamento>> PostLancamento(Lancamento lancamento)
+        public async Task<ActionResult<LancamentoResponse>> PostLancamento(CreateLancamentoRequest request)
         {
             var userId = GetUserId();
-            lancamento.id_usuario = userId;
+            
+            var lancamento = new Lancamento
+            {
+                id_usuario = userId,
+                nm_tipo = request.Tipo,
+                nm_descricao = request.Descricao,
+                nr_valor = request.Valor,
+                dt_dataLancamento = request.DataLancamento,
+                nm_formaPagamento = request.FormaPagamento,
+                nr_parcelas = request.Parcelas,
+                nr_parcelasPagas = request.ParcelasPagas,
+                nr_parcelaInicial = 1 // default
+            };
             
             _context.lancamentos.Add(lancamento);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetLancamento", new { id = lancamento.id_lancamento }, lancamento);
+            return CreatedAtAction("GetLancamento", new { id = lancamento.id_lancamento }, ToDto(lancamento));
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutLancamento(int id, Lancamento lancamento)
+        public async Task<IActionResult> PutLancamento(int id, UpdateLancamentoRequest request)
         {
-            if (id != lancamento.id_lancamento)
-            {
-                return BadRequest();
-            }
-
             var userId = GetUserId();
             var existing = await _context.lancamentos
                 .FirstOrDefaultAsync(l => l.id_lancamento == id && l.id_usuario == userId);
@@ -97,9 +160,14 @@ namespace FinanceApp.API.Controllers
                 return NotFound();
             }
 
-            // Simple update - in real app, might update fields individually
-            _context.Entry(existing).CurrentValues.SetValues(lancamento);
-            
+            existing.nm_tipo = request.Tipo;
+            existing.nm_descricao = request.Descricao;
+            existing.nr_valor = request.Valor;
+            existing.dt_dataLancamento = request.DataLancamento;
+            existing.nm_formaPagamento = request.FormaPagamento;
+            existing.nr_parcelas = request.Parcelas;
+            existing.nr_parcelasPagas = request.ParcelasPagas;
+
             try
             {
                 await _context.SaveChangesAsync();

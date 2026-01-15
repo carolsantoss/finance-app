@@ -14,6 +14,7 @@ const finance = useFinanceStore();
 onMounted(() => {
   finance.fetchSummary();
   finance.fetchTransactions();
+  finance.fetchChartData();
 });
 
 // Formatter
@@ -85,7 +86,7 @@ const formatCurrency = (value: number) => {
                         <option>Este ano</option>
                     </select>
                 </div>
-                <FinanceChart />
+                <FinanceChart :chartData="finance.chartData" />
             </div>
 
             <!-- Recent Transactions -->

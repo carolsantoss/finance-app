@@ -4,7 +4,8 @@ import api from '../api/axios';
 export const useFinanceStore = defineStore('finance', {
     state: () => ({
         transactions: [] as any[],
-        summary: { entradas: 0, saidas: 0, saldo: 0 }
+        summary: { entradas: 0, saidas: 0, saldo: 0 },
+        chartData: { labels: [], incomeData: [], expenseData: [] } // Default empty state
     }),
     actions: {
         async fetchSummary() {
@@ -41,6 +42,14 @@ export const useFinanceStore = defineStore('finance', {
             } catch (error) {
                 console.error('Failed to delete transaction', error);
                 throw error;
+            }
+        },
+        async fetchChartData() {
+            try {
+                const response = await api.get('/lancamentos/chart');
+                this.chartData = response.data;
+            } catch (error) {
+                console.error('Failed to fetch chart data', error);
             }
         }
     }

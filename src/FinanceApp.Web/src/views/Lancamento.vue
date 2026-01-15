@@ -3,9 +3,11 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFinanceStore } from '../stores/finance';
 import { ArrowLeft, Save, Calendar, DollarSign, Tag, CreditCard, Layers } from 'lucide-vue-next';
+import { useToastStore } from '../stores/toast';
 
 const router = useRouter();
 const finance = useFinanceStore();
+const toast = useToastStore();
 
 const form = ref({
     nm_tipo: 'Saída',
@@ -24,10 +26,30 @@ const isCredit = computed(() => form.value.nm_formaPagamento === 'Crédito');
 const handleSubmit = async () => {
     isProcessing.value = true;
     try {
-        await finance.addTransaction(form.value);
+        const payload = {
+            tipo: form.value.nm_tipo,
+            descricao: form.value.nm_descricao,
+            valor: form.value.nr_valor,
+            data: form.value.dt_dataLancamento,
+            formaPagamento: form.value.nm_formaPagamento,
+            parcelas: form.value.nr_parcelas,
+            parcelasPagas: 0 // Default for new transaction
+        };
+        await finance.addTransaction(payload);
+        toast.success('Lançamento salvo com sucesso!');
         router.push('/');
-    } catch (error) {
-        alert('Erro ao salvar lançamento.');
+    } catch (error: any) {
+        if (error.response?.data?.errors) {
+            // Validation errors
+            const errors = error.response.data.errors;
+            Object.keys(errors).forEach(key => {
+                const messages = errors[key];
+                messages.forEach((msg: string) => toast.error(`${key}: ${msg}`));
+            });
+        } else {
+            // Generic error
+            toast.error(error.response?.data?.title || 'Erro ao salvar lançamento.');
+        }
     } finally {
         isProcessing.value = false;
     }
