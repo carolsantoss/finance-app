@@ -47,3 +47,15 @@ The project has been migrated from a WPF Desktop application to a modern Web App
 ## Authentication
 - Default Login endpoint: `/api/auth/login`.
 - Register new users via the Web UI.
+
+## Comandos de Migração (Banco de Dados)
+
+Para criar uma nova migração (gerar o código SQL das tabelas):
+```bash
+dotnet ef migrations add NomeDaMigracao --project src/FinanceApp.Shared --startup-project src/FinanceApp.API
+```
+
+Para aplicar as migrações no banco de dados (criar/atualizar tabelas):
+```bash
+dotnet ef database update --project src/FinanceApp.Shared --startup-project src/FinanceApp.API
+```

@@ -37,8 +37,28 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// Load .env file
+var envPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".env");
+if (File.Exists(envPath))
+{
+    DotNetEnv.Env.Load(envPath);
+    Console.WriteLine($"[INFO] Loaded .env from {envPath}");
+}
+else
+{
+    Console.WriteLine($"[WARN] .env not found at {envPath}");
+}
+
 // Database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = $"Server={Environment.GetEnvironmentVariable("DB_SERVER") ?? "localhost"};" +
+                       $"Port={Environment.GetEnvironmentVariable("DB_PORT") ?? "3306"};" +
+                       $"Database={Environment.GetEnvironmentVariable("DB_DATABASE") ?? "finance_app"};" +
+                       $"Uid={Environment.GetEnvironmentVariable("DB_USER") ?? "root"};" +
+                       $"Pwd='{Environment.GetEnvironmentVariable("DB_PASSWORD") ?? ""}';" +
+                       "AllowUserVariables=True;UseCompression=True;";
+
+Console.WriteLine($"[INFO] Connection String: {connectionString}");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
@@ -93,5 +113,20 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Seed Database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        FinanceApp.API.Data.DbInitializer.Seed(context);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[ERROR] An error occurred while seeding the database: {ex.Message}");
+    }
+}
 
 app.Run();
