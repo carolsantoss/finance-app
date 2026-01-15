@@ -58,6 +58,20 @@ const options = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
+    tooltip: {
+      callbacks: {
+        label: (context: any) => {
+          let label = context.dataset.label || '';
+          if (label) {
+            label += ': ';
+          }
+          if (context.parsed.y !== null) {
+            label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+          }
+          return label;
+        }
+      }
+    },
     legend: {
       position: 'top' as const,
       labels: {
@@ -68,7 +82,12 @@ const options = {
   scales: {
     y: {
       grid: { color: '#334155' }, // Slate 700
-      ticks: { color: '#94a3b8' }
+      ticks: { 
+        color: '#94a3b8',
+        callback: (value: any) => {
+          return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 }).format(value);
+        }
+      }
     },
     x: {
       grid: { display: false },

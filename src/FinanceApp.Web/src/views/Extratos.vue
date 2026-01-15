@@ -26,16 +26,16 @@ onMounted(() => {
 
 const filteredTransactions = computed(() => {
     return finance.transactions.filter(t => {
-        const d = new Date(t.dt_dataLancamento);
+        const d = new Date(t.data);
         const matchMonth = d.getMonth() + 1 === filters.value.month;
         const matchYear = d.getFullYear() === filters.value.year;
-        const matchType = filters.value.type === 'Todos' || t.nm_tipo === filters.value.type;
+        const matchType = filters.value.type === 'Todos' || t.tipo === filters.value.type;
         return matchMonth && matchYear && matchType;
     });
 });
 
-const totalEntradas = computed(() => filteredTransactions.value.filter(t => t.nm_tipo === 'Entrada').reduce((acc, t) => acc + t.nr_valor, 0));
-const totalSaidas = computed(() => filteredTransactions.value.filter(t => t.nm_tipo === 'Saída').reduce((acc, t) => acc + t.nr_valor, 0));
+const totalEntradas = computed(() => filteredTransactions.value.filter(t => t.tipo === 'Entrada').reduce((acc, t) => acc + t.valor, 0));
+const totalSaidas = computed(() => filteredTransactions.value.filter(t => t.tipo === 'Saída').reduce((acc, t) => acc + t.valor, 0));
 const saldo = computed(() => totalEntradas.value - totalSaidas.value);
 
 const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -128,27 +128,27 @@ const handleDelete = async (id: number) => {
                     <tr v-if="filteredTransactions.length === 0">
                          <td colspan="7" class="px-6 py-8 text-center text-gray-500">Nenhum lançamento encontrado.</td>
                     </tr>
-                    <tr v-for="item in filteredTransactions" :key="item.id_lancamento" class="hover:bg-[#29292E] transition-colors">
-                        <td class="px-6 py-4 text-[#C4C4CC]">{{ new Date(item.dt_dataLancamento).toLocaleDateString() }}</td>
-                        <td class="px-6 py-4 font-medium text-gray-100">{{ item.nm_descricao }}</td>
+                    <tr v-for="item in filteredTransactions" :key="item.id" class="hover:bg-[#29292E] transition-colors">
+                        <td class="px-6 py-4 text-[#C4C4CC]">{{ new Date(item.data).toLocaleDateString() }}</td>
+                        <td class="px-6 py-4 font-medium text-gray-100">{{ item.descricao }}</td>
                         <td class="px-6 py-4 text-center">
                              <span class="px-2 py-1 rounded text-xs font-bold"
-                                :class="item.nm_tipo === 'Entrada' ? 'bg-[#00B37E] text-white' : 'bg-[#F75A68] text-white'">
-                                {{ item.nm_tipo }}
+                                :class="item.tipo === 'Entrada' ? 'bg-[#00B37E] text-white' : 'bg-[#F75A68] text-white'">
+                                {{ item.tipo }}
                             </span>
                         </td>
-                         <td class="px-6 py-4 text-[#C4C4CC]">{{ item.nm_formaPagamento }}</td>
-                        <td class="px-6 py-4 font-bold" :class="item.nm_tipo === 'Entrada' ? 'text-[#00B37E]' : 'text-[#F75A68]'">
-                            {{ formatCurrency(item.nr_valor) }}
+                         <td class="px-6 py-4 text-[#C4C4CC]">{{ item.formaPagamento }}</td>
+                        <td class="px-6 py-4 font-bold" :class="item.tipo === 'Entrada' ? 'text-[#00B37E]' : 'text-[#F75A68]'">
+                            {{ formatCurrency(item.valor) }}
                         </td>
                          <td class="px-6 py-4 text-center text-[#C4C4CC]">
-                            <span v-if="item.nm_formaPagamento === 'Crédito'">
-                                {{ item.nr_parcelaInicial }}/{{ item.nr_parcelas }}
+                            <span v-if="item.formaPagamento === 'Crédito'">
+                                {{ item.parcelas }}x
                             </span>
                             <span v-else>-</span>
                         </td>
                         <td class="px-6 py-4 text-center">
-                             <button @click="handleDelete(item.id_lancamento)" class="text-gray-500 hover:text-red-400 transition-colors p-1" title="Excluir">
+                             <button @click="handleDelete(item.id)" class="text-gray-500 hover:text-red-400 transition-colors p-1" title="Excluir">
                                 <Trash2 class="w-4 h-4" />
                             </button>
                         </td>

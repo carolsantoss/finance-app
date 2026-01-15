@@ -5,9 +5,24 @@ export const useFinanceStore = defineStore('finance', {
     state: () => ({
         transactions: [] as any[],
         summary: { entradas: 0, saidas: 0, saldo: 0 },
-        chartData: { labels: [], incomeData: [], expenseData: [] } // Default empty state
+        chartData: { labels: [], incomeData: [], expenseData: [] }, // Default empty state
+        isLoading: false
     }),
     actions: {
+        async fetchAll() {
+            this.isLoading = true;
+            try {
+                await Promise.all([
+                    this.fetchSummary(),
+                    this.fetchTransactions(),
+                    this.fetchChartData()
+                ]);
+            } catch (error) {
+                console.error('Failed to fetch all data', error);
+            } finally {
+                this.isLoading = false;
+            }
+        },
         async fetchSummary() {
             try {
                 const response = await api.get('/lancamentos/summary');
@@ -27,8 +42,7 @@ export const useFinanceStore = defineStore('finance', {
         async addTransaction(transaction: any) {
             try {
                 await api.post('/lancamentos', transaction);
-                await this.fetchTransactions();
-                await this.fetchSummary();
+                await this.fetchAll();
             } catch (error) {
                 console.error('Failed to add transaction', error);
                 throw error;
@@ -37,8 +51,7 @@ export const useFinanceStore = defineStore('finance', {
         async deleteTransaction(id: number) {
             try {
                 await api.delete(`/lancamentos/${id}`);
-                await this.fetchTransactions();
-                await this.fetchSummary();
+                await this.fetchAll();
             } catch (error) {
                 console.error('Failed to delete transaction', error);
                 throw error;
@@ -51,6 +64,6 @@ export const useFinanceStore = defineStore('finance', {
             } catch (error) {
                 console.error('Failed to fetch chart data', error);
             }
-        }
+        },
     }
 });
