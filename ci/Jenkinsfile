@@ -90,7 +90,7 @@ pipeline {
                     sh "sudo cp '${TARGET_DIR}/deploy/nginx.conf' /etc/nginx/sites-available/finance-app"
                     sh "sudo ln -sf /etc/nginx/sites-available/finance-app /etc/nginx/sites-enabled/"
                     // Opcional: remover default para evitar conflito na porta 80, se desejado
-                    // sh "sudo rm -f /etc/nginx/sites-enabled/default"
+                    sh "sudo rm -f /etc/nginx/sites-enabled/default"
 
                     // Recarrega o systemd para reconhecer mudanças
                     sh "sudo systemctl daemon-reload"
