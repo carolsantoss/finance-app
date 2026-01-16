@@ -31,6 +31,15 @@ namespace FinanceApp.Shared.DTOs
 
         [JsonPropertyName("parcelasPagas")]
         public int ParcelasPagas { get; set; } = 0;
+
+        [JsonPropertyName("id_categoria")]
+        public int? IdCategoria { get; set; }
+
+        [JsonPropertyName("id_wallet")]
+        public int? IdWallet { get; set; }
+
+        [JsonPropertyName("id_credit_card")]
+        public int? IdCreditCard { get; set; }
     }
 
     public class UpdateLancamentoRequest : CreateLancamentoRequest
@@ -62,5 +71,23 @@ namespace FinanceApp.Shared.DTOs
 
         [JsonPropertyName("parcelasPagas")]
         public int ParcelasPagas { get; set; }
+
+        [JsonPropertyName("id_categoria")]
+        public int? IdCategoria { get; set; }
+
+        [JsonPropertyName("id_wallet")]
+        public int? IdWallet { get; set; }
+
+        [JsonPropertyName("id_credit_card")]
+        public int? IdCreditCard { get; set; }
+
+        [JsonPropertyName("categoria")]
+        public string? CategoryName { get; set; }
+
+        [JsonPropertyName("categoryIcon")]
+        public string? CategoryIcon { get; set; }
+        
+        [JsonPropertyName("categoryColor")]
+        public string? CategoryColor { get; set; }
     }
 }

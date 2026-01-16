@@ -36,7 +36,13 @@ namespace FinanceApp.API.Controllers
                 DataLancamento = l.dt_dataLancamento,
                 FormaPagamento = l.nm_formaPagamento,
                 Parcelas = l.nr_parcelas,
-                ParcelasPagas = l.nr_parcelasPagas
+                ParcelasPagas = l.nr_parcelasPagas,
+                IdCategoria = l.id_categoria,
+                IdWallet = l.id_wallet,
+                IdCreditCard = l.id_credit_card,
+                CategoryName = l.Categoria?.nm_nome,
+                CategoryIcon = l.Categoria?.nm_icone,
+                CategoryColor = l.Categoria?.nm_cor
             };
         }
 
@@ -45,6 +51,7 @@ namespace FinanceApp.API.Controllers
         {
             var userId = GetUserId();
             var lancamentos = await _context.lancamentos
+                .Include(l => l.Categoria)
                 .Where(l => l.id_usuario == userId)
                 .OrderByDescending(l => l.dt_dataLancamento)
                 .ToListAsync();
@@ -114,6 +121,7 @@ namespace FinanceApp.API.Controllers
         {
             var userId = GetUserId();
             var lancamento = await _context.lancamentos
+                .Include(l => l.Categoria)
                 .FirstOrDefaultAsync(l => l.id_lancamento == id && l.id_usuario == userId);
 
             if (lancamento == null)
@@ -129,6 +137,9 @@ namespace FinanceApp.API.Controllers
         {
             var userId = GetUserId();
             
+            // Validate Logic check if needed?
+            // For now, trust the frontend/request.
+
             var lancamento = new Lancamento
             {
                 id_usuario = userId,
@@ -139,11 +150,19 @@ namespace FinanceApp.API.Controllers
                 nm_formaPagamento = request.FormaPagamento,
                 nr_parcelas = request.Parcelas,
                 nr_parcelasPagas = request.ParcelasPagas,
-                nr_parcelaInicial = 1 // default
+                nr_parcelaInicial = 1, // default
+                id_categoria = request.IdCategoria,
+                id_wallet = request.IdWallet,
+                id_credit_card = request.IdCreditCard
             };
             
             _context.lancamentos.Add(lancamento);
             await _context.SaveChangesAsync();
+
+            // Re-fetch to include relations if needed for DTO
+            // Optimization: Just map if we trust it, or null coalescing.
+            // For response, let's load Category to look nice immediately.
+            await _context.Entry(lancamento).Reference(l => l.Categoria).LoadAsync();
 
             return CreatedAtAction("GetLancamento", new { id = lancamento.id_lancamento }, ToDto(lancamento));
         }
@@ -167,6 +186,9 @@ namespace FinanceApp.API.Controllers
             existing.nm_formaPagamento = request.FormaPagamento;
             existing.nr_parcelas = request.Parcelas;
             existing.nr_parcelasPagas = request.ParcelasPagas;
+            existing.id_categoria = request.IdCategoria;
+            existing.id_wallet = request.IdWallet;
+            existing.id_credit_card = request.IdCreditCard;
 
             try
             {

@@ -54,6 +54,11 @@ const isSidebarOpen = ref(false);
                     <Tag class="w-5 h-5" />
                     <span>Categorias</span>
                 </router-link>
+                <router-link to="/settings/wallets" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                :class="$route.path.includes('/wallets') ? 'bg-[#00875F]/10 text-[#00875F] border border-[#00875F]/20' : 'text-gray-400 hover:text-white hover:bg-[#29292E]'">
+                    <Wallet class="w-5 h-5" />
+                    <span>Carteiras e Cartões</span>
+                </router-link>
                 <!-- Admin Link -->
                 <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
                 :class="$route.path.includes('/admin') ? 'bg-[#00875F]/10 text-[#00875F] border border-[#00875F]/20' : 'text-gray-400 hover:text-white hover:bg-[#29292E]'">
@@ -136,6 +141,8 @@ const isSidebarOpen = ref(false);
                 <router-link to="/" class="block text-gray-300 hover:text-[#00875F]" @click="isSidebarOpen = false">Dashboard</router-link>
                 <router-link to="/extratos" class="block text-gray-300 hover:text-[#00875F]" @click="isSidebarOpen = false">Extratos</router-link>
                 <router-link to="/perfil" class="block text-gray-300 hover:text-[#00875F]" @click="isSidebarOpen = false">Perfil</router-link>
+                <router-link to="/settings/categories" class="block text-gray-300 hover:text-[#00875F]" @click="isSidebarOpen = false">Categorias</router-link>
+                <router-link to="/settings/wallets" class="block text-gray-300 hover:text-[#00875F]" @click="isSidebarOpen = false">Carteiras</router-link>
                 <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="block text-gray-300 hover:text-[#00875F]" @click="isSidebarOpen = false">Administração</router-link>
                 <button @click="auth.logout" class="block text-[#F75A68] mt-8">Sair</button>
             </nav>

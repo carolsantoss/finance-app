@@ -52,6 +52,19 @@ namespace FinanceApp.API.Data
 
             context.users.Add(user);
             context.SaveChanges();
+
+            // Ensure Default Wallet for this New User
+            if (!context.wallets.Any(w => w.id_usuario == user.id_usuario))
+            {
+                context.wallets.Add(new Wallet
+                {
+                    nm_nome = "Conta Principal",
+                    nm_tipo = "Conta Corrente",
+                    nr_saldo_inicial = 0,
+                    id_usuario = user.id_usuario
+                });
+                context.SaveChanges();
+            }
         }
     }
 }

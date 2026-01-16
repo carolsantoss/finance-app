@@ -30,5 +30,15 @@ namespace FinanceApp.Shared.Models
 
         [ForeignKey("id_categoria")]
         public virtual Category? Categoria { get; set; }
+
+        public int? id_wallet { get; set; }
+
+        [ForeignKey("id_wallet")]
+        public virtual Wallet? Wallet { get; set; }
+
+        public int? id_credit_card { get; set; }
+
+        [ForeignKey("id_credit_card")]
+        public virtual CreditCard? CreditCard { get; set; }
     }
 }

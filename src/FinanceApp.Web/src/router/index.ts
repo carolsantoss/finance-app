@@ -41,6 +41,11 @@ const router = createRouter({
                     component: () => import('../views/settings/CategoriesView.vue')
                 },
                 {
+                    path: '/settings/wallets',
+                    name: 'Wallets',
+                    component: () => import('../views/settings/WalletsView.vue')
+                },
+                {
                     path: '/admin/users',
                     name: 'AdminUsers',
                     component: () => import('../views/admin/AdminUsers.vue'),
