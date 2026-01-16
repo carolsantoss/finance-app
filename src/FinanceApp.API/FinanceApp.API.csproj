@@ -21,10 +21,6 @@
     <ProjectReference Include="..\FinanceApp.Shared\FinanceApp.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include=".env">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+
 
 </Project>
