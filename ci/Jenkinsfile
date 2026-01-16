@@ -1,0 +1,112 @@
+pipeline {
+    agent any
+
+    environment {
+        REPO_URL = 'https://github.com/carolsantoss/finance-app'
+        TARGET_DIR = '/app/finance-app'
+        // Define temp dir within workspace to ensure a fresh clone
+        TEMP_DIR = "${WORKSPACE}/temp_clone"
+    }
+
+    stages {
+        stage('Preparation') {
+            steps {
+                script {
+                    // Limpa diretório temporário
+                    sh "rm -rf ${TEMP_DIR}"
+                    sh "mkdir -p ${TEMP_DIR}"
+                    
+                    // Garante que o diretório de destino existe
+                    // Nota: O usuário jenkins precisa de permissão de escrita em /app
+                    sh "sudo mkdir -p ${TARGET_DIR}"
+                    sh "sudo chown -R \$(whoami) ${TARGET_DIR}"
+                }
+            }
+        }
+
+        stage('Checkout to Temp') {
+            steps {
+                dir(TEMP_DIR) {
+                    withCredentials([usernamePassword(credentialsId: 'UsperyGit', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                        echo "Using credentials with username: ${GIT_USERNAME}"
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: '*/main']],
+                            doGenerateSubmoduleConfigurations: false,
+                            extensions: [],
+                            submoduleCfg: [],
+                            userRemoteConfigs: [[credentialsId: 'UsperyGit', url: REPO_URL]]
+                        ])
+                    }
+                }
+            }
+        }
+
+        stage('Deploy Source to Target') {
+            steps {
+                script {
+                    echo "Syncing files to ${TARGET_DIR}..."
+                    // Usa rsync para copiar arquivos, excluindo .git e outros desnecessários
+                    // A flag --delete remove arquivos no destino que não existem na origem (opcional, cuidado)
+                    sh "rsync -av --exclude '.git' ${TEMP_DIR}/ ${TARGET_DIR}/"
+                }
+            }
+        }
+
+        stage('Build Backend') {
+            steps {
+                dir("${TARGET_DIR}/src/FinanceApp.API") {
+                    echo "Building .NET Backend..."
+                    // Restaura e publica localmente. 
+                    // Como estamos "rodando" do código fonte, talvez o usuário queira rodar 'dotnet run' ou 'dotnet publish' e apontar o serviço para o publish.
+                    // Assumindo estrutura do guia anterior: publish em /var/www ou rodar do próprio diretório /app?
+                    // O pedido diz: "la dentro estruturar o sistema e instalar/builder"
+                    // Vamos gerar o publish dentro de uma subpasta 'bin/Release/publish' ou similar, ou publicar para uma pasta 'out' interna
+                    
+                    sh "dotnet restore"
+                    sh "dotnet publish -c Release -o ./publish"
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                dir("${TARGET_DIR}/src/FinanceApp.Web") {
+                    echo "Building Vue Frontend..."
+                    sh "npm install"
+                    sh "npm run build"
+                }
+            }
+        }
+
+        stage('Update System Services') {
+            steps {
+                script {
+                    // Aqui assumimos que os serviços systemd já apontam para os caminhos corretos.
+                    // Se o serviço aponta para /var/www, precisaríamos copiar os artifacts para lá.
+                    // Se o usuário quer rodar DE /app/finance-app, precisamos ajustar o serviço ou mover os artefatos.
+                    // O prompt diz: "jogar para /app/finance-app ... e la dentro estruturar"
+                    // Vou assumir que o serviço deve rodar a partir de /app/finance-app/src/FinanceApp.API/publish 
+                    // e o nginx servir /app/finance-app/src/FinanceApp.Web/dist
+                    
+                    echo "Restarting Services..."
+                    // Requer permissão de sudo sem senha para o usuário jenkins
+                    sh "sudo systemctl restart finance-api"
+                    sh "sudo systemctl reload nginx"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
