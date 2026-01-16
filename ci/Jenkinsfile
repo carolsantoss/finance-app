@@ -82,15 +82,15 @@ pipeline {
         stage('Update System Services') {
             steps {
                 script {
-                    // Aqui assumimos que os serviços systemd já apontam para os caminhos corretos.
-                    // Se o serviço aponta para /var/www, precisaríamos copiar os artifacts para lá.
-                    // Se o usuário quer rodar DE /app/finance-app, precisamos ajustar o serviço ou mover os artefatos.
-                    // O prompt diz: "jogar para /app/finance-app ... e la dentro estruturar"
-                    // Vou assumir que o serviço deve rodar a partir de /app/finance-app/src/FinanceApp.API/publish 
-                    // e o nginx servir /app/finance-app/src/FinanceApp.Web/dist
+                    echo "Installing/Updating Service..."
+                    // Copia o arquivo de serviço para o sistema
+                    sh "sudo cp '${TARGET_DIR}/deploy/finance-api.service' /etc/systemd/system/finance-api.service"
                     
+                    // Recarrega o systemd para reconhecer mudanças
+                    sh "sudo systemctl daemon-reload"
+
                     echo "Restarting Services..."
-                    // Requer permissão de sudo sem senha para o usuário jenkins
+                    sh "sudo systemctl enable finance-api"
                     sh "sudo systemctl restart finance-api"
                     sh "sudo systemctl reload nginx"
                 }
