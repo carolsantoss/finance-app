@@ -37,9 +37,25 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Load .env file
-var envPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".env");
-if (File.Exists(envPath))
+// Load .env file (Search in current dir and up to 3 parent dirs)
+var currentSearchPath = AppDomain.CurrentDomain.BaseDirectory;
+string? envPath = null;
+
+for (int i = 0; i < 4; i++)
+{
+    var candidate = Path.Combine(currentSearchPath, ".env");
+    if (File.Exists(candidate))
+    {
+        envPath = candidate;
+        break;
+    }
+    
+    var parent = Directory.GetParent(currentSearchPath);
+    if (parent == null) break;
+    currentSearchPath = parent.FullName;
+}
+
+if (envPath != null)
 {
     DotNetEnv.Env.Load(envPath);
     Console.WriteLine($"[INFO] Loaded .env from {envPath}");
