@@ -6,6 +6,7 @@ pipeline {
         TARGET_DIR = '/app/finance-app'
         // Define temp dir within workspace to ensure a fresh clone
         TEMP_DIR = "${WORKSPACE}/temp_clone"
+        PROXY_HOST = 'http://proxyapp.uspery.com:8080'
     }
 
     stages {
@@ -75,8 +76,17 @@ pipeline {
             steps {
                 dir("${TARGET_DIR}/src/FinanceApp.Web") {
                     echo "Building Vue Frontend..."
-                    sh "npm install"
-                    sh "npm run build"
+                    
+                    // Configuração de Proxy para NPM e Web
+                    sh "npm config set proxy ${PROXY_HOST}"
+                    sh "npm config set https-proxy ${PROXY_HOST}"
+                    sh "npm config set strict-ssl false"
+                    
+                    // Variáveis de ambiente para o shell (caso alguma ferramento use)
+                    withEnv(["HTTP_PROXY=${PROXY_HOST}", "HTTPS_PROXY=${PROXY_HOST}"]) {
+                        sh "npm install"
+                        sh "npm run build"
+                    }
                 }
             }
         }
