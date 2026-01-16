@@ -5,10 +5,10 @@ Este documento descreve o plano de evolução do sistema para transformá-lo em 
 ## 🚀 Fase 1: Estrutura Fundamental (Core)
 O foco desta fase é dar inteligência aos dados, saindo de "lançamentos soltos" para dados estruturados.
 
-- [ ] **Gestão de Categorias e Tags**
-    - Criar entidade `Category` (Nome, Ícone, Cor, Tipo: Receita/Despesa).
-    - Vincular lançamentos a categorias.
-    - Seed de categorias padrão (Alimentação, Transporte, Lazer, etc.).
+- [x] **Gestão de Categorias e Tags**
+    - [x] Criar entidade `Category` (Nome, Ícone, Cor, Tipo: Receita/Despesa).
+    - [x] Vincular lançamentos a categorias.
+    - [x] Seed de categorias padrão (Alimentação, Transporte, Lazer, etc.).
 - [ ] **Múltiplas Contas / Carteiras**
     - Criar entidade `Wallet` (Nome, Tipo: Conta Corrente, Carteira, Poupança).
     - Controle de saldo por carteira.
