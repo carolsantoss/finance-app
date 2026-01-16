@@ -25,5 +25,10 @@ namespace FinanceApp.Shared.Models
         public int nr_parcelaInicial { get; set; }
 
         public int nr_parcelasPagas { get; set; } = 0;
+
+        public int? id_categoria { get; set; }
+
+        [ForeignKey("id_categoria")]
+        public virtual Category? Categoria { get; set; }
     }
 }

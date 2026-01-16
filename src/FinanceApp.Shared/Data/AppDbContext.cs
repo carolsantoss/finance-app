@@ -12,6 +12,7 @@ namespace FinanceApp.Shared.Data
 
         public DbSet<User> users { get; set; }
         public DbSet<Lancamento> lancamentos { get; set; }
+        public DbSet<Category> categories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

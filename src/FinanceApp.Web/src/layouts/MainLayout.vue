@@ -12,7 +12,8 @@ import {
     Menu,
     X,
     Plus,
-    Shield
+    Shield,
+    Tag
 } from 'lucide-vue-next';
 
 const auth = useAuthStore();
@@ -47,6 +48,11 @@ const isSidebarOpen = ref(false);
                 :class="$route.path.includes('/perfil') ? 'bg-[#00875F]/10 text-[#00875F] border border-[#00875F]/20' : 'text-gray-400 hover:text-white hover:bg-[#29292E]'">
                     <Settings class="w-5 h-5" />
                     <span>Perfil</span>
+                </router-link>
+                <router-link to="/settings/categories" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                :class="$route.path.includes('/categories') ? 'bg-[#00875F]/10 text-[#00875F] border border-[#00875F]/20' : 'text-gray-400 hover:text-white hover:bg-[#29292E]'">
+                    <Tag class="w-5 h-5" />
+                    <span>Categorias</span>
                 </router-link>
                 <!-- Admin Link -->
                 <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"

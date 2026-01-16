@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useFinanceStore } from '../stores/finance';
+import { useCategoryStore } from '../stores/category';
 import { useToastStore } from '../stores/toast';
 import { X, DollarSign, Layers } from 'lucide-vue-next';
+import * as LucideIcons from 'lucide-vue-next';
 
 const emit = defineEmits(['close', 'success']);
 const finance = useFinanceStore();
+const categoryStore = useCategoryStore();
 const toast = useToastStore();
 
 const form = ref({
@@ -15,11 +18,22 @@ const form = ref({
     dt_dataLancamento: new Date().toISOString().split('T')[0],
     nm_formaPagamento: 'Débito',
     nr_parcelas: 1,
-    nr_parcelaInicial: 1
+    nr_parcelaInicial: 1,
+    id_categoria: null as number | null
 });
 
 const isProcessing = ref(false);
 const isCredit = computed(() => form.value.nm_formaPagamento === 'Crédito');
+
+const filteredCategories = computed(() => {
+    return categoryStore.categories.filter(c => c.nm_tipo === form.value.nm_tipo);
+});
+
+// Dynamic Icon Component wrapper
+const getIcon = (name: string) => {
+    // @ts-ignore
+    return LucideIcons[name] || LucideIcons.Tag;
+};
 
 // Currency Mask Logic
 const valorDisplay = ref('');
@@ -43,7 +57,16 @@ const formatCurrencyInput = (event: Event) => {
     }).format(numericValue);
 };
 
+onMounted(() => {
+    categoryStore.fetchCategories();
+});
+
 const handleSubmit = async () => {
+    if (!form.value.id_categoria) {
+        toast.error('Selecione uma categoria.');
+        return;
+    }
+
     isProcessing.value = true;
     try {
         const payload = {
@@ -53,7 +76,8 @@ const handleSubmit = async () => {
             data: form.value.dt_dataLancamento,
             formaPagamento: form.value.nm_formaPagamento,
             parcelas: form.value.nr_parcelas,
-            parcelasPagas: 0
+            parcelasPagas: 0,
+            id_categoria: form.value.id_categoria
         };
         await finance.addTransaction(payload);
         toast.success('Lançamento salvo com sucesso!');
@@ -64,6 +88,7 @@ const handleSubmit = async () => {
         form.value.nr_valor = 0;
         valorDisplay.value = '';
         form.value.nm_descricao = '';
+        form.value.id_categoria = null;
     } catch (error: any) {
         if (error.response?.data?.errors) {
             const errors = error.response.data.errors;
@@ -87,16 +112,16 @@ const close = () => {
 
 <template>
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-        <div class="w-full max-w-2xl bg-[#202024] rounded-2xl shadow-2xl border border-[#323238] overflow-hidden animate-in zoom-in-95 duration-200 relative">
+        <div class="w-full max-w-2xl bg-[#202024] rounded-2xl shadow-2xl border border-[#323238] overflow-hidden animate-in zoom-in-95 duration-200 relative max-h-[90vh] flex flex-col">
             
             <!-- Close Button -->
-            <button @click="close" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#323238] transition-colors">
+            <button @click="close" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#323238] transition-colors z-10">
                 <X class="w-5 h-5" />
             </button>
 
-            <div class="p-8">
-                <!-- Header -->
-                <div class="flex items-center gap-4 mb-8">
+            <!-- Header -->
+            <div class="p-8 pb-0 shrink-0">
+                <div class="flex items-center gap-4 mb-6">
                     <div class="p-2 bg-[#121214] border border-[#323238] rounded-full">
                             <DollarSign class="w-6 h-6 text-white" />
                     </div>
@@ -105,8 +130,10 @@ const close = () => {
                         <p class="text-sm text-gray-400">Registre suas entradas e saídas</p>
                     </div>
                 </div>
+            </div>
 
-                <!-- Form -->
+            <!-- Scrollable Content -->
+            <div class="p-8 pt-0 overflow-y-auto custom-scrollbar">
                 <form @submit.prevent="handleSubmit" class="space-y-6">
                     <!-- Row 1 -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -115,13 +142,13 @@ const close = () => {
                                 <div class="flex rounded-md bg-[#121214] border border-[#323238] p-1">
                                     <button 
                                         type="button" 
-                                        @click="form.nm_tipo = 'Entrada'"
+                                        @click="form.nm_tipo = 'Entrada'; form.id_categoria = null;"
                                         class="flex-1 py-2 text-sm font-medium rounded transition-all"
                                         :class="form.nm_tipo === 'Entrada' ? 'bg-[#00875F] text-white' : 'text-gray-400 hover:text-white'"
                                     >Entrada</button>
                                     <button 
                                         type="button" 
-                                        @click="form.nm_tipo = 'Saída'"
+                                        @click="form.nm_tipo = 'Saída'; form.id_categoria = null;"
                                         class="flex-1 py-2 text-sm font-medium rounded transition-all"
                                         :class="form.nm_tipo === 'Saída' ? 'bg-[#F75A68] text-white' : 'text-gray-400 hover:text-white'"
                                     >Saída</button>
@@ -136,6 +163,26 @@ const close = () => {
                                 placeholder="Ex: Salário..."
                                 required
                             />
+                        </div>
+                    </div>
+
+                    <!-- Category Selector -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-medium text-gray-400 uppercase">Categoria</label>
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-1">
+                            <button
+                                type="button"
+                                v-for="category in filteredCategories"
+                                :key="category.id_categoria"
+                                @click="form.id_categoria = category.id_categoria"
+                                class="flex flex-col items-center justify-center p-3 rounded-lg border transition-all gap-2"
+                                :class="form.id_categoria === category.id_categoria 
+                                    ? 'bg-[#00875F]/20 border-[#00875F] text-white' 
+                                    : 'bg-[#121214] border-[#323238] text-gray-400 hover:bg-[#202024] hover:border-gray-500'"
+                            >
+                                <component :is="getIcon(category.nm_icone)" class="w-5 h-5" :style="{ color: form.id_categoria === category.id_categoria ? 'white' : category.nm_cor }" />
+                                <span class="text-xs font-medium text-center truncate w-full">{{ category.nm_nome }}</span>
+                            </button>
                         </div>
                     </div>
 
@@ -195,7 +242,7 @@ const close = () => {
                         </div>
                     </div>
 
-                    <div class="flex gap-4 mt-8">
+                    <div class="flex gap-4 mt-8 pb-4">
                         <button 
                             type="button" 
                             @click="close"
