@@ -41,50 +41,37 @@ namespace FinanceApp.API.Controllers
             {
                 Token = token,
                 NomeUsuario = user.nm_nomeUsuario,
-                Email = user.nm_email
+                Email = user.nm_email,
+                IsAdmin = user.fl_admin
             });
         }
 
-        [HttpPost("register")]
-        public async Task<ActionResult<LoginResponse>> Register([FromBody] RegisterRequest request)
-        {
-            if (await _context.users.AnyAsync(u => u.nm_email == request.Email))
-            {
-                return BadRequest("Email já cadastrado");
-            }
-
-            var user = new User
-            {
-                nm_nomeUsuario = request.NomeUsuario,
-                nm_email = request.Email,
-                hs_senha = PasswordHelper.Hash(request.Senha)
-            };
-
-            _context.users.Add(user);
-            await _context.SaveChangesAsync();
-
-            var token = GenerateToken(user);
-
-            return Ok(new LoginResponse
-            {
-                Token = token,
-                NomeUsuario = user.nm_nomeUsuario,
-                Email = user.nm_email
-            });
-        }
+        /* 
+         * Registration is now restricted to Administrators via UsersController.
+         * Public registration is disabled.
+         */
 
         private string GenerateToken(User user, bool rememberMe = false)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+            
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.id_usuario.ToString()),
+                new Claim(ClaimTypes.Name, user.nm_nomeUsuario),
+                new Claim(ClaimTypes.Email, user.nm_email)
+            };
+
+            if (user.fl_admin)
+            {
+                claims.Add(new Claim("isAdmin", "true"));
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            }
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.id_usuario.ToString()),
-                    new Claim(ClaimTypes.Name, user.nm_nomeUsuario),
-                    new Claim(ClaimTypes.Email, user.nm_email)
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddDays(rememberMe ? 30 : 7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
                 Issuer = _configuration["Jwt:Issuer"],

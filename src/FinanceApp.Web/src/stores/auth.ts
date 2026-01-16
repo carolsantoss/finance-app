@@ -17,7 +17,8 @@ export const useAuthStore = defineStore('auth', {
                 this.token = response.data.token;
                 this.user = {
                     nomeUsuario: response.data.nomeUsuario,
-                    email: response.data.email
+                    email: response.data.email,
+                    isAdmin: response.data.isAdmin
                 };
 
                 localStorage.setItem('token', this.token);
@@ -29,24 +30,7 @@ export const useAuthStore = defineStore('auth', {
                 throw error;
             }
         },
-        async register(credentials: any) {
-            try {
-                const response = await api.post('/auth/register', credentials);
-                this.token = response.data.token;
-                this.user = {
-                    nomeUsuario: response.data.nomeUsuario,
-                    email: response.data.email
-                };
-
-                localStorage.setItem('token', this.token);
-                localStorage.setItem('user', JSON.stringify(this.user));
-
-                router.push('/');
-            } catch (error) {
-                console.error('Registration failed', error);
-                throw error;
-            }
-        },
+        // Register action removed as public registration is disabled
         async fetchUser() {
             try {
                 const response = await api.get('/users/me');

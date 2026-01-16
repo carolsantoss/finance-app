@@ -26,5 +26,8 @@ namespace FinanceApp.Shared.DTOs
 
         [JsonPropertyName("email")]
         public string Email { get; set; } = string.Empty;
+
+        [JsonPropertyName("isAdmin")]
+        public bool IsAdmin { get; set; } = false;
     }
 }

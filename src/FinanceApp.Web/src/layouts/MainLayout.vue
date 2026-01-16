@@ -11,7 +11,8 @@ import {
     Settings,
     Menu,
     X,
-    Plus
+    Plus,
+    Shield
 } from 'lucide-vue-next';
 
 const auth = useAuthStore();
@@ -47,6 +48,12 @@ const isSidebarOpen = ref(false);
                     <Settings class="w-5 h-5" />
                     <span>Perfil</span>
                 </router-link>
+                <!-- Admin Link -->
+                <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                :class="$route.path.includes('/admin') ? 'bg-[#00875F]/10 text-[#00875F] border border-[#00875F]/20' : 'text-gray-400 hover:text-white hover:bg-[#29292E]'">
+                    <Shield class="w-5 h-5" />
+                    <span>Administração</span>
+                </router-link>
             </nav>
 
             <div class="p-4 border-t border-[#323238]">
@@ -79,6 +86,7 @@ const isSidebarOpen = ref(false);
                      <h2 class="text-2xl font-bold" v-if="$route.path === '/'">Dashboard</h2>
                      <h2 class="text-2xl font-bold" v-else-if="$route.path.includes('/extratos')">Extratos</h2>
                      <h2 class="text-2xl font-bold" v-else-if="$route.path.includes('/perfil')">Meu Perfil</h2>
+                     <h2 class="text-2xl font-bold" v-else-if="$route.path.includes('/admin')">Administração</h2>
                 </div>
 
                 <div class="flex items-center gap-4">
@@ -122,6 +130,7 @@ const isSidebarOpen = ref(false);
                 <router-link to="/" class="block text-gray-300 hover:text-[#00875F]" @click="isSidebarOpen = false">Dashboard</router-link>
                 <router-link to="/extratos" class="block text-gray-300 hover:text-[#00875F]" @click="isSidebarOpen = false">Extratos</router-link>
                 <router-link to="/perfil" class="block text-gray-300 hover:text-[#00875F]" @click="isSidebarOpen = false">Perfil</router-link>
+                <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="block text-gray-300 hover:text-[#00875F]" @click="isSidebarOpen = false">Administração</router-link>
                 <button @click="auth.logout" class="block text-[#F75A68] mt-8">Sair</button>
             </nav>
         </aside>

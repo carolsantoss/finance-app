@@ -12,5 +12,7 @@ namespace FinanceApp.Shared.Models
         public string nm_email { get; set; } = string.Empty;
 
         public string hs_senha { get; set; } = string.Empty;
+
+        public bool fl_admin { get; set; } = false;
     }
 }

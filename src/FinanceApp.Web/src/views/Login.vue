@@ -105,12 +105,7 @@ const handleSubmit = async () => {
                 </div>
             </div>
 
-            <div class="mt-6 flex justify-center text-sm">
-                <span class="text-gray-400">Ainda não tem conta?</span>
-                <router-link to="/register" class="ml-2 text-[#00B37E] font-bold hover:underline">
-                    Criar conta
-                </router-link>
-            </div>
+            <!-- Registration Link Removed for Public Access -->
         </div>
     </div>
 </template>

@@ -5,11 +5,6 @@ const router = createRouter({
     history: createWebHistory(),
     routes: [
         {
-            path: '/register',
-            name: 'Register',
-            component: () => import('../views/Register.vue')
-        },
-        {
             path: '/login',
             name: 'Login',
             component: () => import('../views/Login.vue')
@@ -39,6 +34,12 @@ const router = createRouter({
                     path: '/perfil',
                     name: 'Perfil',
                     component: () => import('../views/Perfil.vue')
+                },
+                {
+                    path: '/admin/users',
+                    name: 'AdminUsers',
+                    component: () => import('../views/admin/AdminUsers.vue'),
+                    meta: { requiresAdmin: true }
                 }
             ]
         }
@@ -56,8 +57,16 @@ router.beforeEach((to, from, next) => {
         }
     }
 
-    // Redirect logic for logged in users trying to access login/register
-    if ((to.name === 'Login' || to.name === 'Register') && authStore.isAuthenticated) {
+    // Check for Admin requirement
+    if (to.matched.some(record => record.meta.requiresAdmin)) {
+        if (!authStore.user?.isAdmin) {
+            next('/'); // Redirect to dashboard if not admin
+            return;
+        }
+    }
+
+    // Redirect logic for logged in users trying to access login
+    if (to.name === 'Login' && authStore.isAuthenticated) {
         next('/');
         return;
     }
