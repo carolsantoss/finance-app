@@ -15,8 +15,12 @@ export default defineConfig({
         name: 'Finance App',
         short_name: 'Finance',
         description: 'Gerenciador Financeiro Pessoal',
-        theme_color: '#09090b', // zinc-950
+        theme_color: '#09090b',
         background_color: '#09090b',
+        display: 'standalone',
+        start_url: '/',
+        scope: '/',
+        orientation: 'portrait',
         icons: [
           {
             src: 'pwa-192x192.png',
