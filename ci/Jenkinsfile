@@ -13,13 +13,13 @@ pipeline {
             steps {
                 script {
                     // Limpa diretório temporário
-                    sh "rm -rf ${TEMP_DIR}"
-                    sh "mkdir -p ${TEMP_DIR}"
+                    sh "rm -rf '${TEMP_DIR}'"
+                    sh "mkdir -p '${TEMP_DIR}'"
                     
                     // Garante que o diretório de destino existe
                     // Nota: O usuário jenkins precisa de permissão de escrita em /app
-                    sh "sudo mkdir -p ${TARGET_DIR}"
-                    sh "sudo chown -R \$(whoami) ${TARGET_DIR}"
+                    sh "sudo mkdir -p '${TARGET_DIR}'"
+                    sh "sudo chown -R \$(whoami) '${TARGET_DIR}'"
                 }
             }
         }
@@ -48,7 +48,7 @@ pipeline {
                     echo "Syncing files to ${TARGET_DIR}..."
                     // Usa rsync para copiar arquivos, excluindo .git e outros desnecessários
                     // A flag --delete remove arquivos no destino que não existem na origem (opcional, cuidado)
-                    sh "rsync -av --exclude '.git' ${TEMP_DIR}/ ${TARGET_DIR}/"
+                    sh "rsync -av --exclude '.git' '${TEMP_DIR}/' '${TARGET_DIR}/'"
                 }
             }
         }
