@@ -107,6 +107,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowAll");
 
+// Support for WAF/Proxies (load balancer terminating SSL)
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
