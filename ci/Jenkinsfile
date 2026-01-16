@@ -63,6 +63,8 @@ pipeline {
                     // O pedido diz: "la dentro estruturar o sistema e instalar/builder"
                     // Vamos gerar o publish dentro de uma subpasta 'bin/Release/publish' ou similar, ou publicar para uma pasta 'out' interna
                     
+                    // Limpa diretório de publish anterior para evitar erros de cópia
+                    sh "rm -rf ./publish"
                     sh "dotnet restore"
                     sh "dotnet publish -c Release -o ./publish"
                 }
