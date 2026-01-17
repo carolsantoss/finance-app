@@ -45,6 +45,11 @@ const isSidebarOpen = ref(false);
                     <TrendingUp class="w-5 h-5" />
                     <span>Extratos</span>
                 </router-link>
+                <router-link to="/reports" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                :class="$route.path.includes('/reports') ? 'bg-[#00875F]/10 text-[#00875F] border border-[#00875F]/20' : 'text-gray-400 hover:text-white hover:bg-[#29292E]'">
+                    <TrendingUp class="w-5 h-5" />
+                    <span>Relatórios</span>
+                </router-link>
                 <router-link to="/perfil" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
                 :class="$route.path.includes('/perfil') ? 'bg-[#00875F]/10 text-[#00875F] border border-[#00875F]/20' : 'text-gray-400 hover:text-white hover:bg-[#29292E]'">
                     <Settings class="w-5 h-5" />

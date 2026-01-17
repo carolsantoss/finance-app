@@ -46,6 +46,45 @@ namespace FinanceApp.API.Controllers
             };
         }
 
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<LancamentoResponse>>> Search(
+            [FromQuery] DateTime? startDate,
+            [FromQuery] DateTime? endDate,
+            [FromQuery] string? categories, // Comma separated IDs
+            [FromQuery] string? wallets,    // Comma separated IDs
+            [FromQuery] string? type)       // "Entrada" or "Saída"
+        {
+            var userId = GetUserId();
+            var query = _context.lancamentos
+                .Include(l => l.Categoria)
+                .Where(l => l.id_usuario == userId)
+                .AsQueryable();
+
+            if (startDate.HasValue)
+                query = query.Where(l => l.dt_dataLancamento >= startDate.Value);
+            
+            if (endDate.HasValue)
+                query = query.Where(l => l.dt_dataLancamento <= endDate.Value);
+
+            if (!string.IsNullOrEmpty(categories))
+            {
+                var catIds = categories.Split(',').Select(int.Parse).ToList();
+                query = query.Where(l => catIds.Contains(l.id_categoria ?? 0));
+            }
+
+            if (!string.IsNullOrEmpty(wallets))
+            {
+                var walletIds = wallets.Split(',').Select(int.Parse).ToList();
+                query = query.Where(l => walletIds.Contains(l.id_wallet ?? 0) || walletIds.Contains(l.id_credit_card ?? 0));
+            }
+
+            if (!string.IsNullOrEmpty(type))
+                query = query.Where(l => l.nm_tipo == type);
+
+            var result = await query.OrderByDescending(l => l.dt_dataLancamento).ToListAsync();
+            return Ok(result.Select(ToDto));
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LancamentoResponse>>> GetLancamentos()
         {

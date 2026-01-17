@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useCategoryStore } from '../stores/category';
+import { useWalletStore } from '../stores/wallet';
 import { useFinanceStore } from '../stores/finance';
 import { ArrowLeft, Trash2, Filter, Calendar, FileText, ArrowDownCircle, ArrowUpCircle, DollarSign, RefreshCw } from 'lucide-vue-next';
 
 const router = useRouter();
 const finance = useFinanceStore();
+const categoryStore = useCategoryStore();
+const walletStore = useWalletStore();
 
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
@@ -13,15 +17,19 @@ const currentMonth = new Date().getMonth() + 1;
 const filters = ref({
     month: currentMonth,
     year: currentYear,
-    type: 'Todos'
+    type: 'Todos',
+    categoryId: null as number | null,
+    walletId: null as number | null
 });
 
 const isProcessing = ref(false);
 
-onMounted(() => {
-    // In a real app, we might pass filters to the API. 
-    // For now, we fetch all and filter client-side or assume store handles it.
-    finance.fetchTransactions();
+onMounted(async () => {
+    await Promise.all([
+        finance.fetchTransactions(),
+        categoryStore.fetchCategories(),
+        walletStore.fetchAll()
+    ]);
 });
 
 const filteredTransactions = computed(() => {
@@ -30,7 +38,10 @@ const filteredTransactions = computed(() => {
         const matchMonth = d.getMonth() + 1 === filters.value.month;
         const matchYear = d.getFullYear() === filters.value.year;
         const matchType = filters.value.type === 'Todos' || t.tipo === filters.value.type;
-        return matchMonth && matchYear && matchType;
+        const matchCategory = !filters.value.categoryId || t.categoryId === filters.value.categoryId;
+        const matchWallet = !filters.value.walletId || t.walletId === filters.value.walletId;
+        
+        return matchMonth && matchYear && matchType && matchCategory && matchWallet;
     });
 });
 
@@ -85,8 +96,8 @@ const handleDelete = async (id: number) => {
         </div>
 
         <!-- Filters -->
-        <div class="bg-[#202024] p-4 rounded-md border border-[#323238] flex items-end gap-4">
-            <div class="flex-1 space-y-1">
+        <div class="bg-[#202024] p-4 rounded-md border border-[#323238] flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-[150px] space-y-1">
                 <label class="text-xs text-gray-400">Tipo</label>
                 <select v-model="filters.type" class="w-full bg-[#121214] border border-[#323238] rounded px-3 py-2 text-white focus:border-[#00875F] outline-none">
                     <option value="Todos">Todos</option>
@@ -104,9 +115,25 @@ const handleDelete = async (id: number) => {
                 <label class="text-xs text-gray-400">Ano</label>
                 <input type="number" v-model="filters.year" class="w-full bg-[#121214] border border-[#323238] rounded px-3 py-2 text-white focus:border-[#00875F] outline-none" />
             </div>
-            <button @click="finance.fetchTransactions()" class="bg-[#00875F] hover:bg-[#00B37E] text-white font-bold px-6 py-2 rounded transition-colors flex items-center gap-2 h-[42px]">
+
+            <!-- Advanced Filters -->
+             <div class="flex-1 min-w-[200px] space-y-1">
+                <label class="text-xs text-gray-400">Categoria</label>
+                <select v-model="filters.categoryId" class="w-full bg-[#121214] border border-[#323238] rounded px-3 py-2 text-white focus:border-[#00875F] outline-none">
+                    <option :value="null">Todas</option>
+                    <option v-for="cat in categoryStore.categories" :key="cat.id_categoria" :value="cat.id_categoria">{{ cat.nm_nome }}</option>
+                </select>
+            </div>
+             <div class="flex-1 min-w-[200px] space-y-1">
+                <label class="text-xs text-gray-400">Carteira</label>
+                <select v-model="filters.walletId" class="w-full bg-[#121214] border border-[#323238] rounded px-3 py-2 text-white focus:border-[#00875F] outline-none">
+                    <option :value="null">Todas</option>
+                    <option v-for="w in walletStore.wallets" :key="w.id_wallet" :value="w.id_wallet">{{ w.nm_nome }}</option>
+                </select>
+            </div>
+
+            <button @click="finance.fetchTransactions()" class="bg-[#29292E] hover:bg-[#323238] text-white font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 h-[42px]" title="Recarregar">
                 <RefreshCw class="w-4 h-4" />
-                Atualizar
             </button>
         </div>
 

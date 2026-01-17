@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import ReportsView from '../views/ReportsView.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -49,6 +50,11 @@ const router = createRouter({
                     path: '/planning/budgets',
                     name: 'Budgets',
                     component: () => import('../views/BudgetsView.vue')
+                },
+                {
+                    path: '/reports',
+                    name: 'Reports',
+                    component: () => import('../views/ReportsView.vue')
                 },
                 {
                     path: '/planning/recurring',
