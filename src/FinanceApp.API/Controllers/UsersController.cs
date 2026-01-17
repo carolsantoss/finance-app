@@ -56,6 +56,29 @@ namespace FinanceApp.API.Controllers
             });
         }
 
+        // PUT: api/users/me/password
+        [HttpPut("me/password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            if (User.Identity?.IsAuthenticated != true) return Unauthorized();
+
+            var id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var user = await _context.users.FindAsync(id);
+
+            if (user == null) return NotFound();
+
+            if (!PasswordHelper.Verify(request.CurrentPassword, user.hs_senha))
+            {
+                return BadRequest("Senha atual incorreta.");
+            }
+
+            user.hs_senha = PasswordHelper.Hash(request.NewPassword);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         // POST: api/users
         [HttpPost]
         public async Task<ActionResult<UserDTO>> CreateUser(CreateUserDTO request)
