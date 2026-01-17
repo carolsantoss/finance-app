@@ -92,6 +92,12 @@ const router = createRouter({
                     name: 'AdminPlans',
                     component: () => import('../views/admin/AdminPlans.vue'),
                     meta: { requiresAdmin: true }
+                },
+                {
+                    path: '/admin/integrations',
+                    name: 'AdminIntegrations',
+                    component: () => import('../views/admin/AdminIntegrations.vue'),
+                    meta: { requiresAdmin: true }
                 }
             ]
         }

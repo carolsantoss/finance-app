@@ -102,6 +102,11 @@ const isSidebarOpen = ref(false);
                     <Package class="w-5 h-5" />
                     <span>Planos</span>
                 </router-link>
+                <router-link v-if="auth.user?.isAdmin" to="/admin/integrations" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                :class="$route.path.includes('/admin/integrations') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
+                    <RefreshCw class="w-5 h-5" />
+                    <span>Integrações</span>
+                </router-link>
             </nav>
 
             <div class="p-4 border-t border-border">

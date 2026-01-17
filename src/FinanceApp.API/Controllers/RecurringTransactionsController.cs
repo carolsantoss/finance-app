@@ -116,8 +116,12 @@ namespace FinanceApp.API.Controllers
         public async Task<IActionResult> ProcessRecurringTransactions([FromHeader(Name = "X-Scheduler-Secret")] string? secret)
         {
             // Simple security check for the scheduler
+            // Fetch secret from DB or Env
+            var dbSecret = (await _context.systemSettings.FindAsync("SchedulerSecret"))?.Value;
             var envSecret = Environment.GetEnvironmentVariable("SCHEDULER_SECRET") ?? "DefaultSecret123";
-            if (secret != envSecret)
+            
+            // Allow either DB-generated secret OR Env var (for legacy/ops support)
+            if (secret != dbSecret && secret != envSecret)
             {
                 return Unauthorized("Invalid Scheduler Secret");
             }
