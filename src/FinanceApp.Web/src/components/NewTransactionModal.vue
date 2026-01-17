@@ -90,10 +90,7 @@ const handleSubmit = async () => {
         return;
     }
 
-    if (showWallets.value && !form.value.id_wallet) {
-        toast.error('Selecione uma carteira/conta.');
-        return;
-    }
+    // Validation for wallet removed as per user request
 
     if (isCredit.value && !form.value.id_credit_card) {
         toast.error('Selecione um cartão de crédito.');
@@ -259,6 +256,7 @@ const close = () => {
                                     v-model="form.id_wallet"
                                     class="w-full bg-[#121214] border border-[#323238] rounded-md px-4 py-2.5 text-white focus:outline-none focus:border-[#00875F]"
                                 >
+                                    <option :value="null">Sem carteira</option>
                                     <option v-for="w in walletStore.wallets" :key="w.id_wallet" :value="w.id_wallet">{{ w.nm_nome }}</option>
                                 </select>
                             </div>
