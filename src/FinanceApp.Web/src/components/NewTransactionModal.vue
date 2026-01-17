@@ -310,13 +310,13 @@ const close = () => {
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="text-xs text-gray-500 mb-1 block">Total Parcelas</label>
-                                <input v-model.number="form.nr_parcelas" type="number" min="1" max="120"
+                                <label class="text-xs text-gray-500 mb-1 block">Parcela Inicial</label>
+                                <input v-model.number="form.nr_parcelaInicial" type="number" min="1" :max="form.nr_parcelas"
                                     class="w-full bg-[#202024] border border-[#323238] rounded px-3 py-2 text-white text-sm focus:border-[#00875F] outline-none" />
                             </div>
                             <div>
-                                <label class="text-xs text-gray-500 mb-1 block">Parcela Inicial</label>
-                                <input v-model.number="form.nr_parcelaInicial" type="number" min="1" :max="form.nr_parcelas"
+                                <label class="text-xs text-gray-500 mb-1 block">Total Parcelas</label>
+                                <input v-model.number="form.nr_parcelas" type="number" min="1" max="120"
                                     class="w-full bg-[#202024] border border-[#323238] rounded px-3 py-2 text-white text-sm focus:border-[#00875F] outline-none" />
                             </div>
                         </div>
