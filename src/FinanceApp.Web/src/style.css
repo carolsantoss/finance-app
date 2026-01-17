@@ -1,3 +1,46 @@
 @tailwind base;
 @tailwind components;
+
 @tailwind utilities;
+
+:root {
+  /* Dark Mode (Default) */
+  --bg-app: #121214;
+  --bg-card: #202024;
+  --bg-input: #121214;
+  --bg-hover: #29292E;
+  
+  --text-primary: #E1E1E6;
+  --text-secondary: #C4C4CC;
+  --text-tertiary: #7C7C8A;
+  
+  --border-color: #323238;
+  
+  --brand-primary: #00875F;
+  --brand-secondary: #00B37E;
+  
+  --danger: #F75A68;
+}
+
+:root.light {
+  /* Light Mode */
+  --bg-app: #F3F4F6;       /* gray-100 */
+  --bg-card: #FFFFFF;      /* white */
+  --bg-input: #FFFFFF;
+  --bg-hover: #E5E7EB;     /* gray-200 */
+  
+  --text-primary: #111827; /* gray-900 */
+  --text-secondary: #4B5563; /* gray-600 */
+  --text-tertiary: #9CA3AF; /* gray-400 */
+  
+  --border-color: #E5E7EB; /* gray-200 */
+  
+  /* Brand stays same or slightly adjusted? Stays same for identity */
+  
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
+}

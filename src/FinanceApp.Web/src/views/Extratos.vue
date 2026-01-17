@@ -67,25 +67,25 @@ const handleDelete = async (id: number) => {
 </script>
 
 <template>
-    <div class="flex flex-col h-full bg-[#121214] p-6 space-y-6 overflow-hidden">
+    <div class="flex flex-col h-full bg-app p-6 space-y-6 overflow-hidden">
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-[#202024] p-6 rounded-md border border-[#323238] flex flex-col justify-between">
-                <div class="flex items-center gap-2 text-gray-400 mb-2">
+            <div class="bg-card p-6 rounded-md border border-border flex flex-col justify-between">
+                <div class="flex items-center gap-2 text-text-secondary mb-2">
                     <ArrowDownCircle class="w-4 h-4" />
                     <span class="text-xs uppercase font-bold">Entradas do Mês</span>
                 </div>
                 <p class="text-2xl font-bold text-[#00B37E]">{{ formatCurrency(totalEntradas) }}</p>
             </div>
-            <div class="bg-[#202024] p-6 rounded-md border border-[#323238] flex flex-col justify-between">
-                 <div class="flex items-center gap-2 text-gray-400 mb-2">
+            <div class="bg-card p-6 rounded-md border border-border flex flex-col justify-between">
+                 <div class="flex items-center gap-2 text-text-secondary mb-2">
                     <ArrowUpCircle class="w-4 h-4" />
                     <span class="text-xs uppercase font-bold">Saídas do Mês</span>
                 </div>
                 <p class="text-2xl font-bold text-[#F75A68]">{{ formatCurrency(totalSaidas) }}</p>
             </div>
-             <div class="bg-[#202024] p-6 rounded-md border border-[#323238] flex flex-col justify-between">
-                 <div class="flex items-center gap-2 text-gray-400 mb-2">
+             <div class="bg-card p-6 rounded-md border border-border flex flex-col justify-between">
+                 <div class="flex items-center gap-2 text-text-secondary mb-2">
                     <DollarSign class="w-4 h-4" />
                     <span class="text-xs uppercase font-bold">Saldo do Mês</span>
                 </div>
@@ -96,51 +96,51 @@ const handleDelete = async (id: number) => {
         </div>
 
         <!-- Filters -->
-        <div class="bg-[#202024] p-4 rounded-md border border-[#323238] flex flex-wrap items-end gap-4">
+        <div class="bg-card p-4 rounded-md border border-border flex flex-wrap items-end gap-4">
             <div class="flex-1 min-w-[150px] space-y-1">
-                <label class="text-xs text-gray-400">Tipo</label>
-                <select v-model="filters.type" class="w-full bg-[#121214] border border-[#323238] rounded px-3 py-2 text-white focus:border-[#00875F] outline-none">
+                <label class="text-xs text-text-secondary">Tipo</label>
+                <select v-model="filters.type" class="w-full bg-input border border-border rounded px-3 py-2 text-text-primary focus:border-brand outline-none">
                     <option value="Todos">Todos</option>
                     <option value="Entrada">Entrada</option>
                     <option value="Saída">Saída</option>
                 </select>
             </div>
              <div class="w-40 space-y-1">
-                <label class="text-xs text-gray-400">Mês</label>
-                <select v-model="filters.month" class="w-full bg-[#121214] border border-[#323238] rounded px-3 py-2 text-white focus:border-[#00875F] outline-none">
+                <label class="text-xs text-text-secondary">Mês</label>
+                <select v-model="filters.month" class="w-full bg-input border border-border rounded px-3 py-2 text-text-primary focus:border-brand outline-none">
                     <option v-for="m in 12" :key="m" :value="m">{{ new Date(0, m-1).toLocaleString('pt-BR', { month: 'long' }) }}</option>
                 </select>
             </div>
              <div class="w-32 space-y-1">
-                <label class="text-xs text-gray-400">Ano</label>
-                <input type="number" v-model="filters.year" class="w-full bg-[#121214] border border-[#323238] rounded px-3 py-2 text-white focus:border-[#00875F] outline-none" />
+                <label class="text-xs text-text-secondary">Ano</label>
+                <input type="number" v-model="filters.year" class="w-full bg-input border border-border rounded px-3 py-2 text-text-primary focus:border-brand outline-none" />
             </div>
 
             <!-- Advanced Filters -->
              <div class="flex-1 min-w-[200px] space-y-1">
-                <label class="text-xs text-gray-400">Categoria</label>
-                <select v-model="filters.categoryId" class="w-full bg-[#121214] border border-[#323238] rounded px-3 py-2 text-white focus:border-[#00875F] outline-none">
+                <label class="text-xs text-text-secondary">Categoria</label>
+                <select v-model="filters.categoryId" class="w-full bg-input border border-border rounded px-3 py-2 text-text-primary focus:border-brand outline-none">
                     <option :value="null">Todas</option>
                     <option v-for="cat in categoryStore.categories" :key="cat.id_categoria" :value="cat.id_categoria">{{ cat.nm_nome }}</option>
                 </select>
             </div>
              <div class="flex-1 min-w-[200px] space-y-1">
-                <label class="text-xs text-gray-400">Carteira</label>
-                <select v-model="filters.walletId" class="w-full bg-[#121214] border border-[#323238] rounded px-3 py-2 text-white focus:border-[#00875F] outline-none">
+                <label class="text-xs text-text-secondary">Carteira</label>
+                <select v-model="filters.walletId" class="w-full bg-input border border-border rounded px-3 py-2 text-text-primary focus:border-brand outline-none">
                     <option :value="null">Todas</option>
                     <option v-for="w in walletStore.wallets" :key="w.id_wallet" :value="w.id_wallet">{{ w.nm_nome }}</option>
                 </select>
             </div>
 
-            <button @click="finance.fetchTransactions()" class="bg-[#29292E] hover:bg-[#323238] text-white font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 h-[42px]" title="Recarregar">
+            <button @click="finance.fetchTransactions()" class="bg-hover hover:bg-opacity-80 text-text-primary font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 h-[42px]" title="Recarregar">
                 <RefreshCw class="w-4 h-4" />
             </button>
         </div>
 
         <!-- Table -->
-        <div class="flex-1 overflow-auto bg-[#202024] rounded-md border border-[#323238]">
-             <table class="w-full text-left text-sm text-gray-400">
-                <thead class="bg-[#29292E] text-xs uppercase font-medium text-gray-300 sticky top-0">
+        <div class="flex-1 overflow-auto bg-card rounded-md border border-border">
+             <table class="w-full text-left text-sm text-text-secondary">
+                <thead class="bg-hover text-xs uppercase font-medium text-text-secondary sticky top-0">
                     <tr>
                         <th class="px-6 py-4">Data</th>
                         <th class="px-6 py-4">Descrição</th>
@@ -151,31 +151,31 @@ const handleDelete = async (id: number) => {
                         <th class="px-6 py-4 text-center">Ações</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#323238]">
+                <tbody class="divide-y divide-border">
                     <tr v-if="filteredTransactions.length === 0">
-                         <td colspan="7" class="px-6 py-8 text-center text-gray-500">Nenhum lançamento encontrado.</td>
+                         <td colspan="7" class="px-6 py-8 text-center text-text-tertiary">Nenhum lançamento encontrado.</td>
                     </tr>
-                    <tr v-for="item in filteredTransactions" :key="item.id" class="hover:bg-[#29292E] transition-colors">
-                        <td class="px-6 py-4 text-[#C4C4CC]">{{ new Date(item.data).toLocaleDateString() }}</td>
-                        <td class="px-6 py-4 font-medium text-gray-100">{{ item.descricao }}</td>
+                    <tr v-for="item in filteredTransactions" :key="item.id" class="hover:bg-hover transition-colors">
+                        <td class="px-6 py-4 text-text-secondary">{{ new Date(item.data).toLocaleDateString() }}</td>
+                        <td class="px-6 py-4 font-medium text-text-primary">{{ item.descricao }}</td>
                         <td class="px-6 py-4 text-center">
                              <span class="px-2 py-1 rounded text-xs font-bold"
                                 :class="item.tipo === 'Entrada' ? 'bg-[#00B37E] text-white' : 'bg-[#F75A68] text-white'">
                                 {{ item.tipo }}
                             </span>
                         </td>
-                         <td class="px-6 py-4 text-[#C4C4CC]">{{ item.formaPagamento }}</td>
+                         <td class="px-6 py-4 text-text-secondary">{{ item.formaPagamento }}</td>
                         <td class="px-6 py-4 font-bold" :class="item.tipo === 'Entrada' ? 'text-[#00B37E]' : 'text-[#F75A68]'">
                             {{ formatCurrency(item.valor) }}
                         </td>
-                         <td class="px-6 py-4 text-center text-[#C4C4CC]">
+                         <td class="px-6 py-4 text-center text-text-tertiary">
                             <span v-if="item.formaPagamento === 'Crédito'">
                                 {{ item.parcelas }}x
                             </span>
                             <span v-else>-</span>
                         </td>
                         <td class="px-6 py-4 text-center">
-                             <button @click="handleDelete(item.id)" class="text-gray-500 hover:text-red-400 transition-colors p-1" title="Excluir">
+                             <button @click="handleDelete(item.id)" class="text-text-tertiary hover:text-danger transition-colors p-1" title="Excluir">
                                 <Trash2 class="w-4 h-4" />
                             </button>
                         </td>
