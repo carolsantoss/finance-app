@@ -140,7 +140,7 @@ namespace FinanceApp.API.Controllers
             try
             {
                 // Security Check
-                 var dbSecret = (await _context.systemSettings.FindAsync("SchedulerSecret"))?.Value;
+                var dbSecret = (await _context.systemSettings.FindAsync("SchedulerSecret"))?.Value;
                 var envSecret = Environment.GetEnvironmentVariable("SCHEDULER_SECRET") ?? "DefaultSecret123";
                 
                 if (secret != dbSecret && secret != envSecret)
@@ -159,55 +159,56 @@ namespace FinanceApp.API.Controllers
                     .Where(i => i.fl_ativo)
                     .ToListAsync();
 
+                // Group by User to send consolidated email
+                var userInvoices = activeInvoices
+                    .GroupBy(i => i.id_usuario);
+
                 int emailsSent = 0;
                 var details = new List<string>();
 
-                foreach (var invoice in activeInvoices)
+                foreach (var group in userInvoices)
                 {
-                    // Check if already paid this month
-                    bool paidThisMonth = invoice.dt_ultimoPagamento.HasValue &&
-                                         invoice.dt_ultimoPagamento.Value.Month == today.Month &&
-                                         invoice.dt_ultimoPagamento.Value.Year == today.Year;
+                    var user = group.First().Usuario;
+                    if (user == null || string.IsNullOrEmpty(user.nm_email)) continue;
 
-                    if (paidThisMonth) continue;
+                    var pendingInvoices = new List<(Invoice Invoice, DateTime DueDate, double DaysUntilDue)>();
 
-                    // Calculate Due Date for THIS Month
-                    // Handle February 30th etc -> Math.Min
-                    int daysInMonth = DateTime.DaysInMonth(today.Year, today.Month);
-                    int day = Math.Min(invoice.nr_diaVencimento, daysInMonth);
-                    var dueDate = new DateTime(today.Year, today.Month, day);
-
-                    // If Due Date has passed, maybe still send? Or only BEFORE?
-                    // Request says: "Start 5 days before... sending daily"
-                    // So we send if (DueDate - Today) <= 5 days AND (DueDate >= Today OR DueDate < Today but still not paid? User said "daily alerting")
-                    
-                    // Let's alerting if DueDate is close (within 5 days) OR passed (overdue)
-                    // Logic: If Today is >= (DueDate - 5 days)
-                    
-                    var daysUntilDue = (dueDate - today).TotalDays;
-
-                    // If bill is for next month (e.g. today is 30th, bill is 5th), handle wrap?
-                    // For simplicity, let's assume we look at current month's bill. 
-                    // If today is 25th, bill is 30th -> starts alerting. 
-                    // If today is 5th, bill is 5th -> alert.
-                    // If today is 6th, bill was 5th -> alert overdue? "Start 5 days before... sending daily".
-                    // Implies we keep sending until paid.
-
-                    if (daysUntilDue <= 5 && invoice.Usuario != null && !string.IsNullOrEmpty(invoice.Usuario.nm_email))
+                    foreach (var invoice in group)
                     {
-                        // Send Email
-                        string subject = daysUntilDue < 0 
-                            ? $"🔴 ATRASADO: Sua fatura de {invoice.nm_descricao} venceu em {dueDate:dd/MM}!" 
-                            : daysUntilDue == 0 
-                                ? $"⚠️ HOJE: Sua fatura de {invoice.nm_descricao} vence hoje!" 
-                                : $"📅 LEMBRETE: Sua fatura de {invoice.nm_descricao} vence em {daysUntilDue} dias";
+                        // Check if already paid this month
+                        bool paidThisMonth = invoice.dt_ultimoPagamento.HasValue &&
+                                             invoice.dt_ultimoPagamento.Value.Month == today.Month &&
+                                             invoice.dt_ultimoPagamento.Value.Year == today.Year;
 
-                        string body = GenerateEmailBody(invoice, dueDate, daysUntilDue);
+                        if (paidThisMonth) continue;
 
-                        await _emailService.SendEmailAsync(invoice.Usuario.nm_email, subject, body);
+                        // Calculate Due Date for THIS Month
+                        int daysInMonth = DateTime.DaysInMonth(today.Year, today.Month);
+                        int day = Math.Min(invoice.nr_diaVencimento, daysInMonth);
+                        var dueDate = new DateTime(today.Year, today.Month, day);
+
+                        var daysUntilDue = (dueDate - today).TotalDays;
+
+                        // Alert rule: Within 5 days OR Overdue
+                        if (daysUntilDue <= 5)
+                        {
+                            pendingInvoices.Add((invoice, dueDate, daysUntilDue));
+                        }
+                    }
+
+                    if (pendingInvoices.Any())
+                    {
+                        // Generate Consolidated Email
+                        string subject = pendingInvoices.Any(p => p.DaysUntilDue < 0) 
+                            ? "🔴 ATENÇÃO: Você possui faturas vencidas!" 
+                            : "📅 Resumo de Faturas a Vencer";
+
+                        string body = GenerateConsolidatedEmailBody(user.nm_nomeUsuario, pendingInvoices);
+
+                        await _emailService.SendEmailAsync(user.nm_email, subject, body);
                         
                         emailsSent++;
-                        details.Add($"Sent to {invoice.Usuario.nm_email} for {invoice.nm_descricao}");
+                        details.Add($"Sent to {user.nm_email} with {pendingInvoices.Count} invoices");
                     }
                 }
 
@@ -231,62 +232,110 @@ namespace FinanceApp.API.Controllers
             }
         }
 
-        private string GenerateEmailBody(Invoice i, DateTime dueDate, double daysUntilDue)
+        private string GenerateConsolidatedEmailBody(string userName, List<(Invoice Invoice, DateTime DueDate, double DaysUntilDue)> invoices)
         {
-            string statusColor = daysUntilDue < 0 ? "#F75A68" : (daysUntilDue == 0 ? "#FBA94C" : "#00B37E");
-            string statusText = daysUntilDue < 0 ? "Vencida" : (daysUntilDue == 0 ? "Vence Hoje" : "A Vencer");
-
-            return $@"
+            var sb = new StringBuilder();
+            
+            // Header
+            sb.Append(@"
 <!DOCTYPE html>
 <html>
 <head>
 <style>
-    body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121214; color: #E1E1E6; padding: 20px; }}
-    .container {{ max-width: 600px; margin: 0 auto; background-color: #202024; border-radius: 8px; overflow: hidden; border: 1px solid #323238; }}
-    .header {{ background-color: #29292E; padding: 20px; text-align: center; border-bottom: 1px solid #323238; }}
-    .content {{ padding: 40px 20px; text-align: center; }}
-    .amount {{ font-size: 32px; font-weight: bold; color: {statusColor}; margin: 20px 0; }}
-    .label {{ color: #7C7C8A; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }}
-    .btn {{ display: inline-block; background-color: #00875F; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }}
-    .footer {{ padding: 20px; text-align: center; color: #7C7C8A; font-size: 12px; border-top: 1px solid #323238; }}
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #09090A; color: #E1E1E6; padding: 20px; margin: 0; }
+    .container { max-width: 600px; margin: 0 auto; background-color: #121214; border-radius: 12px; overflow: hidden; border: 1px solid #29292E; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    .header { background: linear-gradient(90deg, #00875F 0%, #00B37E 100%); padding: 30px 20px; text-align: center; }
+    .header h1 { margin: 0; color: white; font-size: 24px; font-weight: bold; }
+    .header p { margin: 5px 0 0; color: rgba(255,255,255,0.9); font-size: 14px; }
+    .content { padding: 30px 20px; }
+    .greeting { font-size: 18px; margin-bottom: 20px; color: #E1E1E6; }
+    .card { background-color: #202024; border-radius: 8px; padding: 15px; margin-bottom: 12px; border-left: 4px solid #323238; display: flex; justify-content: space-between; align-items: center; }
+    .card-content { flex: 1; }
+    .card-title { font-weight: bold; font-size: 16px; color: #E1E1E6; display: block; margin-bottom: 4px; }
+    .card-date { font-size: 12px; color: #7C7C8A; }
+    .card-value { font-weight: bold; font-size: 16px; color: #E1E1E6; text-align: right; min-width: 100px; }
+    
+    .status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
+    
+    .status-overdue { border-color: #F75A68; } 
+    .status-overdue .status-badge { background-color: rgba(247, 90, 104, 0.1); color: #F75A68; }
+    .status-today { border-color: #FBA94C; }
+    .status-today .status-badge { background-color: rgba(251, 169, 76, 0.1); color: #FBA94C; }
+    .status-soon { border-color: #00B37E; }
+    .status-soon .status-badge { background-color: rgba(0, 179, 126, 0.1); color: #00B37E; }
+
+    .total-section { margin-top: 30px; border-top: 1px solid #323238; padding-top: 20px; text-align: right; }
+    .total-label { color: #7C7C8A; font-size: 14px; }
+    .total-value { font-size: 24px; font-weight: bold; color: #00B37E; }
+
+    .btn { display: block; width: 100%; text-align: center; background-color: #00875F; color: white; padding: 16px 0; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 30px; transition: background 0.2s; }
+    .btn:hover { background-color: #00B37E; }
+    
+    .footer { padding: 20px; text-align: center; color: #7C7C8A; font-size: 12px; background-color: #09090A; border-top: 1px solid #202024; }
 </style>
 </head>
 <body>
     <div class='container'>
         <div class='header'>
-            <h2>Finance App</h2>
+            <h1>Finance App</h1>
+            <p>Resumo de Pagamentos</p>
         </div>
         <div class='content'>
-            <p style='font-size: 18px;'>Olá, <strong>{i.Usuario?.nm_nomeUsuario}</strong>!</p>
-            <p>Este é um lembrete sobre sua fatura:</p>
-            
-            <div style='margin-top: 30px;'>
-                <div class='label'>Descrição</div>
-                <h3 style='margin: 5px 0 20px 0;'>{i.nm_descricao}</h3>
+            <div class='greeting'>Olá, <strong>" + userName + @"</strong>!</div>
+            <p style='color: #C4C4CC; margin-bottom: 25px;'>Identificamos as seguintes faturas pendentes para este mês:</p>
+");
+
+            decimal total = 0;
+
+            foreach (var item in invoices.OrderBy(x => x.DueDate))
+            {
+                total += item.Invoice.nr_valor;
                 
-                <div class='label'>Valor</div>
-                <div class='amount'>R$ {i.nr_valor:N2}</div>
-                
-                <div class='label'>Vencimento</div>
-                <p style='font-size: 18px; font-weight: bold;'>{dueDate:dd/MM/yyyy}</p>
-                
-                <div style='background-color: {statusColor}20; color: {statusColor}; display: inline-block; padding: 4px 12px; border-radius: 4px; font-weight: bold; margin-top: 10px;'>
-                    {statusText}
+                string statusClass = "status-soon";
+                string statusLabel = "A Vencer";
+
+                if (item.DaysUntilDue < 0)
+                {
+                    statusClass = "status-overdue";
+                    statusLabel = "Vencida";
+                }
+                else if (item.DaysUntilDue == 0)
+                {
+                    statusClass = "status-today";
+                    statusLabel = "Vence Hoje";
+                }
+
+                sb.Append($@"
+            <div class='card {statusClass}'>
+                <div class='card-content'>
+                    <span class='card-title'>{item.Invoice.nm_descricao} <span class='status-badge'>{statusLabel}</span></span>
+                    <span class='card-date'>Vencimento: {item.DueDate:dd/MM/yyyy}</span>
                 </div>
+                <div class='card-value'>
+                    R$ {item.Invoice.nr_valor:N2}
+                </div>
+            </div>");
+            }
+
+            // Total and Footer
+            sb.Append($@"
+            <div class='total-section'>
+                <span class='total-label'>Total a Pagar</span><br>
+                <div class='total-value'>R$ {total:N2}</div>
             </div>
 
-            <p style='margin-top: 30px; color: #C4C4CC;'>
-                Acesse o sistema para marcar como pago e parar de receber estes alertas este mês.
-            </p>
-
-            <a href='http://localhost:5173/invoices' class='btn'>Ir para o Sistema</a>
+            <a href='http://localhost:5173/planning/invoices' class='btn'>Gerenciar Faturas</a>
         </div>
         <div class='footer'>
-            <p>Enviado automaticamente pelo Finance App Scheduler.</p>
+            <p>Este é um aviso automático. Por favor, não responda.</p>
+            <p>&copy; 2024 Finance App</p>
         </div>
     </div>
 </body>
-</html>";
+</html>");
+
+            return sb.ToString();
         }
     }
 }
+
