@@ -54,7 +54,8 @@ namespace FinanceApp.API.Controllers
         private string GenerateToken(User user, bool rememberMe = false)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+            var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured");
+            var key = Encoding.ASCII.GetBytes(jwtKey);
             
             var claims = new List<Claim>
             {
