@@ -17,6 +17,7 @@ namespace FinanceApp.Shared.Data
         public DbSet<CreditCard> creditCards { get; set; }
         public DbSet<Budget> budgets { get; set; }
         public DbSet<RecurringTransaction> recurringTransactions { get; set; }
+        public DbSet<Goal> goals { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

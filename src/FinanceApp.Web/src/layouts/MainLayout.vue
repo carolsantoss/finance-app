@@ -17,7 +17,8 @@ import {
     Tag,
     RefreshCw,
     Sun,
-    Moon
+    Moon,
+    Target
 } from 'lucide-vue-next';
 
 const auth = useAuthStore();
@@ -74,6 +75,11 @@ const isSidebarOpen = ref(false);
                     <p class="text-xs font-bold text-text-tertiary uppercase tracking-wider">Planejamento</p>
                 </div>
 
+                <router-link to="/goals" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                :class="$route.path.includes('/goals') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
+                    <Target class="w-5 h-5" />
+                    <span>Metas</span>
+                </router-link>
                 <router-link to="/planning/budgets" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
                 :class="$route.path.includes('/budgets') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
                     <TrendingUp class="w-5 h-5" />
@@ -121,6 +127,7 @@ const isSidebarOpen = ref(false);
                      <!-- Breadcrumb or Page Title could go here, but for now we keep it dynamic or simple -->
                      <h2 class="text-2xl font-bold text-text-primary" v-if="$route.path === '/'">Dashboard</h2>
                      <h2 class="text-2xl font-bold text-text-primary" v-else-if="$route.path.includes('/extratos')">Extratos</h2>
+                     <h2 class="text-2xl font-bold text-text-primary" v-else-if="$route.path.includes('/goals')">Metas</h2>
                      <h2 class="text-2xl font-bold text-text-primary" v-else-if="$route.path.includes('/reports')">Relatórios</h2>
                      <h2 class="text-2xl font-bold text-text-primary" v-else-if="$route.path.includes('/perfil')">Meu Perfil</h2>
                      <h2 class="text-2xl font-bold text-text-primary" v-else-if="$route.path.includes('/admin')">Administração</h2>
@@ -172,6 +179,7 @@ const isSidebarOpen = ref(false);
               <nav class="space-y-4">
                 <router-link to="/" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Dashboard</router-link>
                 <router-link to="/extratos" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Extratos</router-link>
+                <router-link to="/goals" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Metas</router-link>
                 <router-link to="/reports" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Relatórios</router-link>
                 <router-link to="/perfil" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Perfil</router-link>
                 <router-link to="/settings/categories" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Categorias</router-link>

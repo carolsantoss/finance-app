@@ -145,6 +145,37 @@ const confirm2FA = async () => {
 };
 
 const userInitial = computed(() => auth.user?.nomeUsuario?.charAt(0).toUpperCase() || 'U');
+
+const downloadExport = async () => {
+    try {
+        toast.info('Gerando arquivo de exportação...');
+        const response = await api.get('/export/json', { responseType: 'blob' });
+        
+        // Create blob link to download
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Extract filename from header if present, or generate one
+        const contentDisposition = response.headers['content-disposition'];
+        let fileName = 'finance_export.json';
+        if (contentDisposition) {
+            const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
+            if (fileNameMatch && fileNameMatch.length === 2)
+                fileName = fileNameMatch[1];
+        }
+        
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        
+        toast.success('Download iniciado!');
+    } catch (error) {
+        console.error(error);
+        toast.error('Erro ao exportar dados.');
+    }
+};
 </script>
 
 <template>
@@ -374,7 +405,7 @@ const userInitial = computed(() => auth.user?.nomeUsuario?.charAt(0).toUpperCase
                             <Download class="w-12 h-12 text-text-tertiary mx-auto mb-4 group-hover:text-brand transition-colors" />
                             <h4 class="font-bold text-text-primary">Exportar Dados Completos</h4>
                             <p class="text-sm text-text-secondary mb-4">Baixe um arquivo .JSON com todas as suas transações e histórico.</p>
-                            <button class="px-4 py-2 bg-card border border-border rounded-md text-sm font-bold hover:bg-brand hover:text-white hover:border-brand transition-all">
+                            <button @click="downloadExport" class="px-4 py-2 bg-card border border-border rounded-md text-sm font-bold hover:bg-brand hover:text-white hover:border-brand transition-all">
                                 Solicitar Exportação
                             </button>
                         </div>

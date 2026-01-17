@@ -40,6 +40,7 @@ namespace FinanceApp.API.Controllers
                 IdCategoria = l.id_categoria,
                 IdWallet = l.id_wallet,
                 IdCreditCard = l.id_credit_card,
+                IdGoal = l.id_goal,
                 CategoryName = l.Categoria?.nm_nome,
                 CategoryIcon = l.Categoria?.nm_icone,
                 CategoryColor = l.Categoria?.nm_cor
@@ -192,10 +193,33 @@ namespace FinanceApp.API.Controllers
                 nr_parcelaInicial = 1, // default
                 id_categoria = request.IdCategoria,
                 id_wallet = request.IdWallet,
-                id_credit_card = request.IdCreditCard
+                id_credit_card = request.IdCreditCard,
+                id_goal = request.IdGoal
             };
             
             _context.lancamentos.Add(lancamento);
+
+            // Update Goal Value if linked
+            if (request.IdGoal.HasValue)
+            {
+               var goal = await _context.goals.FirstOrDefaultAsync(g => g.id_goal == request.IdGoal.Value && g.id_usuario == userId);
+               if (goal != null)
+               {
+                   // If 'Entrada', add to goal. If 'Saida', maybe subtract? 
+                   // User said "Entrada para uma Meta".
+                   // Assuming only positive flow for now or based on Type.
+                   // If I invest 100 in Goal, it is an Expense from Wallet? Or Income to Goal?
+                   // The prompt said "Entrada para uma Meta". I will assume it increases goal value regardless.
+                   // But logic dictates:
+                   if (request.Tipo == "Entrada")
+                   {
+                      goal.nr_valorAtual += request.Valor;
+                   }
+                   // If user assigns 'Saida' to a Goal (e.g. spending FROM the goal saving?), should it decrease?
+                   // For now, let's implement increase for 'Entrada'.
+               }
+            }
+
             await _context.SaveChangesAsync();
 
             // Re-fetch to include relations if needed for DTO
@@ -261,6 +285,20 @@ namespace FinanceApp.API.Controllers
             }
 
             _context.lancamentos.Remove(lancamento);
+            
+            // Revert Goal Value
+            if (lancamento.id_goal.HasValue)
+            {
+                var goal = await _context.goals.FindAsync(lancamento.id_goal.Value);
+                if (goal != null)
+                {
+                    if (lancamento.nm_tipo == "Entrada")
+                    {
+                        goal.nr_valorAtual -= lancamento.nr_valor;
+                    }
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             return NoContent();

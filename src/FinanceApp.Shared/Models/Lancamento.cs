@@ -37,8 +37,13 @@ namespace FinanceApp.Shared.Models
         public virtual Wallet? Wallet { get; set; }
 
         public int? id_credit_card { get; set; }
-
+        
         [ForeignKey("id_credit_card")]
         public virtual CreditCard? CreditCard { get; set; }
+
+        public int? id_goal { get; set; }
+        
+        [ForeignKey("id_goal")]
+        public virtual Goal? Goal { get; set; }
     }
 }

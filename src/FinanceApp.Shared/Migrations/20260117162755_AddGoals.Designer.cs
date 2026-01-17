@@ -4,6 +4,7 @@ using FinanceApp.Shared.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceApp.Shared.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260117162755_AddGoals")]
+    partial class AddGoals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -175,9 +178,6 @@ namespace FinanceApp.Shared.Migrations
                     b.Property<int?>("id_credit_card")
                         .HasColumnType("int");
 
-                    b.Property<int?>("id_goal")
-                        .HasColumnType("int");
-
                     b.Property<int>("id_usuario")
                         .HasColumnType("int");
 
@@ -213,8 +213,6 @@ namespace FinanceApp.Shared.Migrations
                     b.HasIndex("id_categoria");
 
                     b.HasIndex("id_credit_card");
-
-                    b.HasIndex("id_goal");
 
                     b.HasIndex("id_wallet");
 
@@ -408,10 +406,6 @@ namespace FinanceApp.Shared.Migrations
                         .WithMany()
                         .HasForeignKey("id_credit_card");
 
-                    b.HasOne("FinanceApp.Shared.Models.Goal", "Goal")
-                        .WithMany()
-                        .HasForeignKey("id_goal");
-
                     b.HasOne("FinanceApp.Shared.Models.Wallet", "Wallet")
                         .WithMany()
                         .HasForeignKey("id_wallet");
@@ -419,8 +413,6 @@ namespace FinanceApp.Shared.Migrations
                     b.Navigation("Categoria");
 
                     b.Navigation("CreditCard");
-
-                    b.Navigation("Goal");
 
                     b.Navigation("Wallet");
                 });

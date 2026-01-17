@@ -4,8 +4,9 @@ import { useFinanceStore } from '../stores/finance';
 import { useCategoryStore } from '../stores/category';
 import { useWalletStore } from '../stores/wallet';
 import { useToastStore } from '../stores/toast';
-import { X, DollarSign, Layers, Wallet, CreditCard } from 'lucide-vue-next';
+import { X, DollarSign, Layers, Wallet, CreditCard, Target } from 'lucide-vue-next';
 import * as LucideIcons from 'lucide-vue-next';
+import api from '../api/axios';
 
 const emit = defineEmits(['close', 'success']);
 const finance = useFinanceStore();
@@ -23,8 +24,20 @@ const form = ref({
     nr_parcelaInicial: 1,
     id_categoria: null as number | null,
     id_wallet: null as number | null,
-    id_credit_card: null as number | null
+    id_credit_card: null as number | null,
+    id_goal: null as number | null
 });
+
+const goals = ref<any[]>([]);
+
+const fetchGoals = async () => {
+    try {
+        const response = await api.get('/goals');
+        goals.value = response.data;
+    } catch (e) {
+        console.error('Failed to fetch goals');
+    }
+};
 
 const isProcessing = ref(false);
 const isCredit = computed(() => form.value.nm_formaPagamento === 'Crédito');
@@ -76,7 +89,9 @@ const formatCurrencyInput = (event: Event) => {
 
 onMounted(async () => {
     categoryStore.fetchCategories();
+    categoryStore.fetchCategories();
     await walletStore.fetchAll();
+    await fetchGoals();
     
     // Auto-select first wallet if exists
     if (walletStore.wallets.length > 0) {
@@ -109,7 +124,8 @@ const handleSubmit = async () => {
             parcelasPagas: 0,
             id_categoria: form.value.id_categoria,
             id_wallet: form.value.id_wallet,
-            id_credit_card: form.value.id_credit_card
+            id_credit_card: form.value.id_credit_card,
+            id_goal: form.value.id_goal
         };
         await finance.addTransaction(payload);
         toast.success('Lançamento salvo com sucesso!');
@@ -121,6 +137,7 @@ const handleSubmit = async () => {
         valorDisplay.value = '';
         form.value.nm_descricao = '';
         form.value.id_categoria = null;
+        form.value.id_goal = null;
     } catch (error: any) {
         if (error.response?.data?.errors) {
             const errors = error.response.data.errors;
@@ -212,6 +229,20 @@ const close = () => {
                                 <span class="text-xs font-medium text-center truncate w-full">{{ category.nm_nome }}</span>
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Goal Selector (Entrada Only) -->
+                    <div v-if="form.nm_tipo === 'Entrada'" class="space-y-2 animate-in fade-in slide-in-from-top-1">
+                         <label class="text-xs font-medium text-gray-400 uppercase flex items-center gap-1">
+                            <Target class="w-3 h-3" /> Vincular a uma Meta (Opcional)
+                         </label>
+                         <select 
+                            v-model="form.id_goal"
+                            class="w-full bg-[#121214] border border-[#323238] rounded-md px-4 py-2.5 text-white focus:outline-none focus:border-[#00875F]"
+                        >
+                            <option :value="null">Nenhuma meta selecionada</option>
+                            <option v-for="g in goals" :key="g.id_goal" :value="g.id_goal">{{ g.nm_titulo }}</option>
+                        </select>
                     </div>
 
                     <!-- Row 2: Value & Date -->

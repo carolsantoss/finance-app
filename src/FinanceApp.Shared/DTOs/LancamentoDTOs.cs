@@ -40,6 +40,9 @@ namespace FinanceApp.Shared.DTOs
 
         [JsonPropertyName("id_credit_card")]
         public int? IdCreditCard { get; set; }
+
+        [JsonPropertyName("id_goal")]
+        public int? IdGoal { get; set; }
     }
 
     public class UpdateLancamentoRequest : CreateLancamentoRequest
@@ -89,5 +92,8 @@ namespace FinanceApp.Shared.DTOs
         
         [JsonPropertyName("categoryColor")]
         public string? CategoryColor { get; set; }
+
+        [JsonPropertyName("id_goal")]
+        public int? IdGoal { get; set; }
     }
 }

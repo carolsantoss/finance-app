@@ -67,6 +67,11 @@ const router = createRouter({
                     component: () => import('../views/ReportsView.vue')
                 },
                 {
+                    path: '/goals',
+                    name: 'Goals',
+                    component: () => import('../views/GoalsView.vue')
+                },
+                {
                     path: '/planning/recurring',
                     name: 'Recurring',
                     component: () => import('../views/RecurringView.vue')
