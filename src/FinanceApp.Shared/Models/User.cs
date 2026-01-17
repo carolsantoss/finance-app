@@ -15,6 +15,11 @@ namespace FinanceApp.Shared.Models
 
         public bool fl_admin { get; set; } = false;
 
+        // Profile Details
+        public string? nm_funcao { get; set; } // Job Title
+        public string? nr_telefone { get; set; } // Phone
+        public string? ds_sobre { get; set; } // Bio/About
+
         // Security Fields
         public bool fl_emailConfirmado { get; set; } = false;
         public string? cd_tokenConfirmacao { get; set; }

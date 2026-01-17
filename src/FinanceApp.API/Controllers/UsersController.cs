@@ -32,7 +32,10 @@ namespace FinanceApp.API.Controllers
                 NomeUsuario = u.nm_nomeUsuario,
                 Email = u.nm_email,
                 IsAdmin = u.fl_admin,
-                IsTwoFactorEnabled = u.fl_2faHabilitado
+                IsTwoFactorEnabled = u.fl_2faHabilitado,
+                JobTitle = u.nm_funcao,
+                Phone = u.nr_telefone,
+                Bio = u.ds_sobre
             }));
         }
 
@@ -54,7 +57,10 @@ namespace FinanceApp.API.Controllers
                 NomeUsuario = user.nm_nomeUsuario,
                 Email = user.nm_email,
                 IsAdmin = user.fl_admin,
-                IsTwoFactorEnabled = user.fl_2faHabilitado
+                IsTwoFactorEnabled = user.fl_2faHabilitado,
+                JobTitle = user.nm_funcao,
+                Phone = user.nr_telefone,
+                Bio = user.ds_sobre
             });
         }
 
@@ -107,7 +113,10 @@ namespace FinanceApp.API.Controllers
                 NomeUsuario = user.nm_nomeUsuario,
                 Email = user.nm_email,
                 IsAdmin = user.fl_admin,
-                IsTwoFactorEnabled = user.fl_2faHabilitado
+                IsTwoFactorEnabled = user.fl_2faHabilitado,
+                JobTitle = user.nm_funcao,
+                Phone = user.nr_telefone,
+                Bio = user.ds_sobre
             });
         }
 
@@ -120,7 +129,11 @@ namespace FinanceApp.API.Controllers
 
             user.nm_nomeUsuario = request.NomeUsuario;
             user.nm_email = request.Email;
+            user.nm_email = request.Email;
             user.fl_admin = request.IsAdmin;
+            user.nm_funcao = request.JobTitle;
+            user.nr_telefone = request.Phone;
+            user.ds_sobre = request.Bio;
 
             if (!string.IsNullOrEmpty(request.Senha))
             {
@@ -175,6 +188,9 @@ namespace FinanceApp.API.Controllers
         public string Email { get; set; } = string.Empty;
         public bool IsAdmin { get; set; }
         public bool IsTwoFactorEnabled { get; set; }
+        public string? JobTitle { get; set; }
+        public string? Phone { get; set; }
+        public string? Bio { get; set; }
     }
 
     public class CreateUserDTO
@@ -191,5 +207,8 @@ namespace FinanceApp.API.Controllers
         public string Email { get; set; } = string.Empty;
         public string? Senha { get; set; } // Optional
         public bool IsAdmin { get; set; }
+        public string? JobTitle { get; set; }
+        public string? Phone { get; set; }
+        public string? Bio { get; set; }
     }
 }

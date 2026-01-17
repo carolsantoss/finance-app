@@ -3,7 +3,11 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useToastStore } from '../stores/toast';
-import { ArrowLeft, User, Lock, Save, FileText, Key, LogOut, ShieldCheck, QrCode as QrIcon, CheckCircle } from 'lucide-vue-next';
+import { 
+    User, Lock, Settings, Download, LogOut, 
+    Save, Key, ShieldCheck, Mail, Briefcase, Phone, Info,
+    Moon, Sun, Bell, Monitor
+} from 'lucide-vue-next';
 import api from '../api/axios';
 import QRCode from 'qrcode';
 
@@ -11,57 +15,82 @@ const router = useRouter();
 const auth = useAuthStore();
 const toast = useToastStore();
 
-const isTwoFactorEnabled = ref(false);
-const show2FASetup = ref(false);
-const qrCodeUrl = ref('');
-const twoFactorSecret = ref('');
-const twoFactorCode = ref('');
-const isVerifying2FA = ref(false);
+// Tabs
+const activeTab = ref('general'); // general, security, preferences, data
+const tabs = [
+    { id: 'general', label: 'Geral', icon: User },
+    { id: 'security', label: 'Segurança', icon: Lock },
+    { id: 'preferences', label: 'Preferências', icon: Settings },
+    { id: 'data', label: 'Dados', icon: Download },
+];
 
-onMounted(async () => {
-    await auth.fetchUser();
-    // Update local form with fetched data
-    profileForm.value.nomeUsuario = auth.user?.nomeUsuario || '';
-    profileForm.value.email = auth.user?.email || '';
-    
-    // Check 2FA status (assuming it's in user object now)
-    // We cast to any because TS might not know about isTwoFactorEnabled yet if we didn't update interface
-    // But API returns it as IsTwoFactorEnabled (mapped from fl_2faHabilitado)
-    // However, fetchUser updates `this.user` which is stored in local storage.
-    // We need to ensure fetchUser retrieves the new field.
-    if ((auth.user as any)?.isTwoFactorEnabled) {
-        isTwoFactorEnabled.value = true;
-    }
-});
-
-// Profile Form
+// Profile Data
 const profileForm = ref({
-    nomeUsuario: auth.user?.nomeUsuario || '',
-    email: auth.user?.email || ''
+    nomeUsuario: '',
+    email: '',
+    jobTitle: '',
+    phone: '',
+    bio: ''
 });
 
-// Password Form
+// Security Data
 const passwordForm = ref({
     currentPassword: '',
     newPassword: '',
     confirmNewPassword: ''
 });
 
-const isSavingProfile = ref(false);
-const isChangingPassword = ref(false);
+// 2FA Data
+const isTwoFactorEnabled = ref(false);
+const show2FASetup = ref(false);
+const qrCodeUrl = ref('');
+const twoFactorSecret = ref('');
+const twoFactorCode = ref('');
 
+// Loading States
+const isLoading = ref(false);
+const isSaving = ref(false);
+const isVerifying2FA = ref(false);
+
+onMounted(async () => {
+    isLoading.value = true;
+    try {
+        await auth.fetchUser();
+        // Populate form
+        const user = auth.user as any; // Cast to access new fields if TS complains
+        if (user) {
+            profileForm.value = {
+                nomeUsuario: user.nomeUsuario || '',
+                email: user.email || '',
+                jobTitle: user.jobTitle || '',
+                phone: user.phone || '',
+                bio: user.bio || ''
+            };
+            isTwoFactorEnabled.value = user.isTwoFactorEnabled || false;
+        }
+    } catch (error) {
+        console.error(error);
+    } finally {
+        isLoading.value = false;
+    }
+});
+
+// Actions
 const handleUpdateProfile = async () => {
-    isSavingProfile.value = true;
+    isSaving.value = true;
     try {
         await auth.updateProfile({
             nomeUsuario: profileForm.value.nomeUsuario,
-            email: profileForm.value.email
+            email: profileForm.value.email,
+            jobTitle: profileForm.value.jobTitle,
+            phone: profileForm.value.phone,
+            bio: profileForm.value.bio
         });
         toast.success('Perfil atualizado com sucesso!');
     } catch (error: any) {
         toast.error(error.response?.data || 'Erro ao atualizar perfil.');
     } finally {
-        isSavingProfile.value = false;
+        isSaving.value = false;
     }
 };
 
@@ -71,7 +100,7 @@ const handleChangePassword = async () => {
         return;
     }
 
-    isChangingPassword.value = true;
+    isSaving.value = true;
     try {
         await auth.changePassword({
             currentPassword: passwordForm.value.currentPassword,
@@ -83,7 +112,7 @@ const handleChangePassword = async () => {
     } catch (error: any) {
         toast.error(error.response?.data || 'Erro ao alterar senha.');
     } finally {
-        isChangingPassword.value = false;
+        isSaving.value = false;
     }
 };
 
@@ -93,8 +122,6 @@ const start2FASetup = async () => {
         const response = await api.post('/auth/enable-2fa');
         const { secret, qrCodeUri } = response.data;
         twoFactorSecret.value = secret;
-        
-        // Generate QR Code Image
         qrCodeUrl.value = await QRCode.toDataURL(qrCodeUri);
         show2FASetup.value = true;
     } catch (error) {
@@ -106,185 +133,255 @@ const confirm2FA = async () => {
     isVerifying2FA.value = true;
     try {
         await api.post('/auth/confirm-2fa', { code: twoFactorCode.value });
-        toast.success('Autenticação de Dois Fatores habilitada com sucesso!');
+        toast.success('2FA habilitado com sucesso!');
         isTwoFactorEnabled.value = true;
         show2FASetup.value = false;
-        // Refresh user to persist state
         await auth.fetchUser();
     } catch (error: any) {
-        toast.error(error.response?.data || 'Código inválido.');
+        toast.error('Código inválido.');
     } finally {
         isVerifying2FA.value = false;
     }
 };
 
-// Computed to display user initial
-const userInitial = computed(() => {
-    return auth.user?.nomeUsuario?.charAt(0).toUpperCase() || 'U';
-});
+const userInitial = computed(() => auth.user?.nomeUsuario?.charAt(0).toUpperCase() || 'U');
 </script>
 
 <template>
-    <div class="flex flex-col h-full bg-app p-6 space-y-6 overflow-y-auto items-center justify-start">
-        <!-- Cards Container -->
-        <div class="w-full max-w-4xl grid grid-cols-1 gap-6 pb-6">
-            
-            <!-- User Banner -->
-            <div class="bg-card p-6 rounded-lg border border-border flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden">
-                <!-- Background Decoration -->
-                <div class="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-brand/10 to-transparent pointer-events-none"></div>
-
-                <div class="w-20 h-20 rounded-full bg-brand flex items-center justify-center text-3xl font-bold text-white shadow-lg border-4 border-app z-10">
-                    {{ userInitial }}
-                </div>
-                 <div class="text-center sm:text-left z-10">
-                    <h2 class="text-2xl font-bold text-text-primary">{{ auth.user?.nomeUsuario }}</h2>
-                    <p class="text-text-secondary">{{ auth.user?.email }}</p>
-                    <span class="text-xs text-brand mt-2 inline-flex items-center gap-1 bg-brand/10 px-2 py-1 rounded border border-brand/20">
-                        <User class="w-3 h-3" />
-                        Conta Ativa
-                    </span>
-                </div>
+    <div class="h-full flex overflow-hidden bg-app">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-card border-r border-border flex flex-col hidden lg:flex">
+            <div class="p-6 border-b border-border">
+                <h2 class="text-xl font-bold text-text-primary">Configurações</h2>
+                <p class="text-xs text-text-secondary">Gerencie sua conta</p>
             </div>
+            
+            <nav class="flex-1 p-4 space-y-1">
+                <button 
+                    v-for="tab in tabs" 
+                    :key="tab.id"
+                    @click="activeTab = tab.id"
+                    :class="[
+                        'w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all duration-200',
+                        activeTab === tab.id 
+                            ? 'bg-brand/10 text-brand border border-brand/20 shadow-sm' 
+                            : 'text-text-secondary hover:bg-hover hover:text-text-primary'
+                    ]"
+                >
+                    <component :is="tab.icon" class="w-5 h-5" />
+                    {{ tab.label }}
+                </button>
+            </nav>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Personal Info -->
-                 <div class="bg-card p-6 rounded-lg border border-border h-fit">
-                     <h3 class="text-lg font-bold text-text-primary mb-6 flex items-center gap-2 pb-4 border-b border-border">
-                        <FileText class="w-5 h-5 text-brand" />
-                        Informações Pessoais
-                    </h3>
+            <div class="p-4 border-t border-border">
+                <button @click="auth.logout" class="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-md transition-colors text-sm font-medium">
+                    <LogOut class="w-5 h-5" />
+                    Sair da Conta
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-8 relative">
+            <div class="max-w-3xl mx-auto space-y-8">
+                
+                <!-- Profile Header -->
+                <div class="flex items-center gap-6 mb-8">
+                    <div class="w-24 h-24 rounded-full bg-brand flex items-center justify-center text-4xl font-bold text-white shadow-xl ring-4 ring-app">
+                        {{ userInitial }}
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-text-primary">{{ auth.user?.nomeUsuario }}</h1>
+                        <p class="text-text-secondary">{{ auth.user?.email }}</p>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="px-2 py-0.5 rounded-full bg-brand/10 text-brand text-xs font-bold border border-brand/20">PRO</span>
+                            <span v-if="isTwoFactorEnabled" class="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-xs font-bold border border-green-500/20">Seguro</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs (Mobile Only) -->
+                <div class="flex lg:hidden overflow-x-auto pb-4 gap-2 border-b border-border mb-6">
+                     <button 
+                        v-for="tab in tabs" 
+                        :key="tab.id"
+                        @click="activeTab = tab.id"
+                        :class="[
+                            'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap',
+                            activeTab === tab.id 
+                                ? 'bg-brand text-white' 
+                                : 'bg-card text-text-secondary border border-border'
+                        ]"
+                    >
+                        {{ tab.label }}
+                    </button>
+                </div>
+
+                <!-- Content Area -->
+                <div class="bg-card rounded-xl border border-border shadow-sm overflow-hidden min-h-[500px]">
                     
-                    <form @submit.prevent="handleUpdateProfile" class="space-y-5">
-                        <div class="space-y-2">
-                            <label class="text-xs text-text-secondary font-medium uppercase tracking-wider">Nome completo</label>
-                            <input 
-                                v-model="profileForm.nomeUsuario"
-                                type="text"
-                                required
-                                class="w-full bg-input border border-border rounded-md p-3 text-text-primary focus:outline-none focus:border-brand transition-colors" 
-                            />
-                        </div>
-                         <div class="space-y-2">
-                            <label class="text-xs text-text-secondary font-medium uppercase tracking-wider">E-mail</label>
-                            <input 
-                                v-model="profileForm.email"
-                                type="email"
-                                required
-                                class="w-full bg-input border border-border rounded-md p-3 text-text-primary focus:outline-none focus:border-brand transition-colors" 
-                            />
-                        </div>
-
-                        <button type="submit" :disabled="isSavingProfile" class="w-full mt-2 bg-brand hover:bg-brand-hover text-white font-bold py-3 rounded-md transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand/20 disabled:opacity-50 disabled:cursor-not-allowed">
-                             <Save class="w-4 h-4" />
-                             <span v-if="isSavingProfile">Salvando...</span>
-                             <span v-else>Salvar Alterações</span>
-                        </button>
-                    </form>
-                 </div>
-
-                 <!-- Security -->
-                 <div class="bg-card p-6 rounded-lg border border-border h-fit">
-                    <h3 class="text-lg font-bold text-text-primary mb-6 flex items-center gap-2 pb-4 border-b border-border">
-                        <Lock class="w-5 h-5 text-danger" />
-                        Segurança
-                    </h3>
-
-                    <!-- 2FA Section -->
-                    <div class="mb-8 p-4 bg-hover rounded-lg border border-border">
-                        <div class="flex justify-between items-start mb-4">
+                    <!-- General Tab -->
+                    <div v-if="activeTab === 'general'" class="p-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div class="flex items-center justify-between mb-6">
                             <div>
-                                <h4 class="font-bold text-text-primary flex items-center gap-2">
-                                    <ShieldCheck class="w-4 h-4 text-brand" />
-                                    Autenticação em Dois Fatores (2FA)
-                                </h4>
-                                <p class="text-xs text-text-secondary mt-1">Adicione uma camada extra de segurança à sua conta.</p>
+                                <h3 class="text-lg font-bold text-text-primary">Informações Pessoais</h3>
+                                <p class="text-sm text-text-secondary">Atualize seus dados de perfil público.</p>
                             </div>
-                            <span v-if="isTwoFactorEnabled" class="px-2 py-1 bg-[#00875F]/20 text-[#00B37E] text-xs font-bold rounded border border-[#00875F]/30">HABILITADO</span>
-                            <span v-else class="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs font-bold rounded border border-gray-500/30">DESABILITADO</span>
-                        </div>
-
-                        <div v-if="!isTwoFactorEnabled && !show2FASetup">
-                            <button @click="start2FASetup" class="w-full py-2 bg-brand/10 text-brand border border-brand/20 hover:bg-brand/20 rounded-md text-sm font-bold transition-colors">
-                                Configurar 2FA
+                            <button @click="handleUpdateProfile" :disabled="isSaving" class="bg-brand hover:bg-brand-hover text-white px-4 py-2 rounded-md font-bold text-sm flex items-center gap-2 transition-all">
+                                <Save class="w-4 h-4" />
+                                {{ isSaving ? 'Salvando...' : 'Salvar' }}
                             </button>
                         </div>
 
-                        <div v-if="show2FASetup" class="animate-in fade-in zoom-in duration-300">
-                             <div class="flex flex-col items-center gap-4 bg-card p-4 rounded border border-border mb-4">
-                                <img :src="qrCodeUrl" alt="QR Code" class="w-32 h-32 rounded bg-white p-2" />
-                                <div class="text-center">
-                                    <p class="text-xs text-text-secondary mb-1">Escaneie com Google Authenticator ou Authy</p>
-                                    <p class="text-xs font-mono bg-black/30 px-2 py-1 rounded text-text-tertiary">{{ twoFactorSecret }}</p>
-                                </div>
-                             </div>
-                             
-                             <div class="space-y-2">
-                                <label class="text-xs text-text-secondary">Código de verificação</label>
-                                <div class="flex gap-2">
-                                    <input v-model="twoFactorCode" type="text" placeholder="000000" maxlength="6" class="flex-1 bg-input border border-border rounded px-3 py-2 text-text-primary text-center font-mono focus:border-brand outline-none" />
-                                    <button @click="confirm2FA" :disabled="isVerifying2FA || twoFactorCode.length < 6" class="bg-brand hover:bg-brand-hover text-white px-4 rounded font-bold disabled:opacity-50">
-                                        {{ isVerifying2FA ? '...' : 'OK' }}
-                                    </button>
-                                </div>
-                             </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                                    <User class="w-3 h-3" /> Nome Completo
+                                </label>
+                                <input v-model="profileForm.nomeUsuario" type="text" class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                                    <Mail class="w-3 h-3" /> Email
+                                </label>
+                                <input v-model="profileForm.email" type="email" class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                                    <Briefcase class="w-3 h-3" /> Cargo / Função
+                                </label>
+                                <input v-model="profileForm.jobTitle" type="text" placeholder="Ex: Desenvolvedor Senior" class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                                    <Phone class="w-3 h-3" /> Telefone
+                                </label>
+                                <input v-model="profileForm.phone" type="text" placeholder="(00) 00000-0000" class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all" />
+                            </div>
+
+                            <div class="col-span-1 md:col-span-2 space-y-2">
+                                <label class="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+                                    <Info class="w-3 h-3" /> Sobre Mim
+                                </label>
+                                <textarea v-model="profileForm.bio" rows="4" placeholder="Escreva um pouco sobre você..." class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all resize-none"></textarea>
+                            </div>
                         </div>
                     </div>
 
-                    <form @submit.prevent="handleChangePassword" class="space-y-5">
-                         <div class="space-y-2">
-                            <label class="text-xs text-text-secondary font-medium uppercase tracking-wider">Senha atual</label>
-                            <input 
-                                v-model="passwordForm.currentPassword"
-                                type="password"
-                                required
-                                class="w-full bg-input border border-border rounded-md p-3 text-text-primary focus:outline-none focus:border-danger transition-colors" 
-                                placeholder="••••••••"
-                            />
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-xs text-text-secondary font-medium uppercase tracking-wider">Nova senha</label>
-                            <input 
-                                v-model="passwordForm.newPassword"
-                                type="password"
-                                required
-                                class="w-full bg-input border border-border rounded-md p-3 text-text-primary focus:outline-none focus:border-danger transition-colors" 
-                                placeholder="••••••••"
-                            />
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-xs text-text-secondary font-medium uppercase tracking-wider">Confirmar nova senha</label>
-                            <input 
-                                v-model="passwordForm.confirmNewPassword"
-                                type="password"
-                                required
-                                class="w-full bg-input border border-border rounded-md p-3 text-text-primary focus:outline-none focus:border-danger transition-colors" 
-                                placeholder="••••••••"
-                            />
+                    <!-- Security Tab -->
+                    <div v-if="activeTab === 'security'" class="p-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <h3 class="text-lg font-bold text-text-primary mb-2">Segurança da Conta</h3>
+                        <p class="text-sm text-text-secondary mb-8">Gerencie sua senha e autenticação de dois fatores.</p>
+
+                        <!-- 2FA -->
+                        <div class="p-6 rounded-xl border" :class="isTwoFactorEnabled ? 'bg-green-500/5 border-green-500/20' : 'bg-input border-border'">
+                            <div class="flex justify-between items-start">
+                                <div class="flex gap-4">
+                                    <div class="p-3 rounded-lg" :class="isTwoFactorEnabled ? 'bg-green-500/10 text-green-500' : 'bg-card text-text-secondary'">
+                                        <ShieldCheck class="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-text-primary">Autenticação em Dois Fatores (2FA)</h4>
+                                        <p class="text-sm text-text-secondary max-w-md mt-1">Proteja sua conta solicitando um código do seu app autenticador ao fazer login.</p>
+                                    </div>
+                                </div>
+                                <div v-if="isTwoFactorEnabled" class="flex items-center gap-2 text-green-500 font-bold text-sm bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
+                                    Ativo
+                                </div>
+                                <button v-else @click="start2FASetup" class="px-4 py-2 bg-brand text-white rounded-md font-bold text-sm hover:bg-brand-hover transition-colors">
+                                    Ativar Agora
+                                </button>
+                            </div>
+
+                            <!-- Setup Area -->
+                            <div v-if="show2FASetup && !isTwoFactorEnabled" class="mt-6 pt-6 border-t border-border flex flex-col md:flex-row gap-8 items-center animate-in fade-in">
+                                <div class="bg-white p-2 rounded-lg shadow-sm">
+                                    <img :src="qrCodeUrl" class="w-32 h-32" />
+                                </div>
+                                <div class="flex-1 space-y-4 w-full">
+                                    <div>
+                                        <p class="text-text-primary font-medium mb-1">1. Escaneie o QR Code</p>
+                                        <p class="text-xs text-text-secondary">Use o Google Authenticator ou Authy.</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-text-primary font-medium mb-2">2. Digite o código</p>
+                                        <div class="flex gap-2">
+                                            <input v-model="twoFactorCode" type="text" placeholder="000000" maxlength="6" class="w-32 bg-card border border-border rounded px-3 py-2 text-center font-mono focus:border-brand outline-none" />
+                                            <button @click="confirm2FA" class="px-4 py-2 bg-text-primary text-app rounded font-bold hover:bg-text-secondary">Verificar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                         <button type="submit" :disabled="isChangingPassword" class="w-full mt-2 bg-hover hover:bg-hover/80 text-text-primary font-bold py-3 rounded-md transition-all flex items-center justify-center gap-2 border border-border hover:border-danger group disabled:opacity-50 disabled:cursor-not-allowed">
-                             <Key class="w-4 h-4 text-text-tertiary group-hover:text-danger transition-colors" />
-                             <span v-if="isChangingPassword" class="group-hover:text-danger transition-colors">Alterando...</span>
-                             <span v-else class="group-hover:text-danger transition-colors">Alterar Senha</span>
-                        </button>
-                    </form>
-                 </div>
-            </div>
-
-            <!-- Danger Zone -->
-            <div class="bg-card p-6 rounded-lg border border-border/50 mt-4 opacity-80 hover:opacity-100 transition-opacity">
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div>
-                        <h4 class="text-text-primary font-bold">Sair do Sistema</h4>
-                        <p class="text-sm text-text-secondary">Encerrar sua sessão atual neste dispositivo.</p>
+                        <!-- Reset Password -->
+                        <div class="mt-8 pt-8 border-t border-border">
+                            <h4 class="font-bold text-text-primary mb-4 flex items-center gap-2">
+                                <Key class="w-4 h-4 text-brand" /> Alterar Senha
+                            </h4>
+                            <form @submit.prevent="handleChangePassword" class="space-y-4 max-w-md">
+                                <input v-model="passwordForm.currentPassword" type="password" placeholder="Senha Atual" class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:border-brand outline-none transition-all" />
+                                <input v-model="passwordForm.newPassword" type="password" placeholder="Nova Senha" class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:border-brand outline-none transition-all" />
+                                <input v-model="passwordForm.confirmNewPassword" type="password" placeholder="Confirmar Nova Senha" class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:border-brand outline-none transition-all" />
+                                <button type="submit" :disabled="isSaving" class="px-6 py-2 bg-card border border-border hover:border-brand hover:text-brand text-text-secondary rounded-md font-bold transition-all w-full">
+                                    Atualizar Senha
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                     <button @click="auth.logout" class="px-6 py-2 bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 rounded-md font-bold transition-colors flex items-center gap-2">
-                        <LogOut class="w-4 h-4" />
-                        Sair
-                    </button>
+
+                    <!-- Preferences Tab (Mock) -->
+                    <div v-if="activeTab === 'preferences'" class="p-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <h3 class="text-lg font-bold text-text-primary mb-6">Preferências do Sistema</h3>
+                        
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between p-4 bg-input rounded-lg border border-border">
+                                <div class="flex items-center gap-4">
+                                    <Moon class="w-5 h-5 text-brand" />
+                                    <div>
+                                        <h4 class="font-bold text-text-primary">Modo Escuro</h4>
+                                        <p class="text-xs text-text-secondary">Alternar entre tema claro e escuro</p>
+                                    </div>
+                                </div>
+                                <div class="w-12 h-6 bg-brand rounded-full relative cursor-pointer">
+                                    <div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between p-4 bg-input rounded-lg border border-border">
+                                <div class="flex items-center gap-4">
+                                    <Bell class="w-5 h-5 text-blue-400" />
+                                    <div>
+                                        <h4 class="font-bold text-text-primary">Notificações</h4>
+                                        <p class="text-xs text-text-secondary">Receber alertas via email</p>
+                                    </div>
+                                </div>
+                                <div class="w-12 h-6 bg-border rounded-full relative cursor-pointer">
+                                    <div class="absolute left-1 top-1 w-4 h-4 bg-text-tertiary rounded-full shadow-sm"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                     <!-- Data Tab (Mock) -->
+                     <div v-if="activeTab === 'data'" class="p-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <h3 class="text-lg font-bold text-text-primary mb-6">Seus Dados</h3>
+                        
+                        <div class="bg-input rounded-xl p-6 text-center border-2 border-dashed border-border hover:border-brand/50 transition-colors cursor-pointer group">
+                            <Download class="w-12 h-12 text-text-tertiary mx-auto mb-4 group-hover:text-brand transition-colors" />
+                            <h4 class="font-bold text-text-primary">Exportar Dados Completos</h4>
+                            <p class="text-sm text-text-secondary mb-4">Baixe um arquivo .JSON com todas as suas transações e histórico.</p>
+                            <button class="px-4 py-2 bg-card border border-border rounded-md text-sm font-bold hover:bg-brand hover:text-white hover:border-brand transition-all">
+                                Solicitar Exportação
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 </template>

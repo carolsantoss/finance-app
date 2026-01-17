@@ -2,10 +2,21 @@ import { defineStore } from 'pinia';
 import api from '../api/axios';
 import router from '../router';
 
+interface User {
+    id: number;
+    nomeUsuario: string;
+    email: string;
+    isAdmin: boolean;
+    jobTitle?: string;
+    phone?: string;
+    bio?: string;
+    isTwoFactorEnabled?: boolean;
+}
+
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         token: localStorage.getItem('token') || '',
-        user: JSON.parse(localStorage.getItem('user') || 'null'),
+        user: JSON.parse(localStorage.getItem('user') || 'null') as User | null,
     }),
     getters: {
         isAuthenticated: (state) => !!state.token,
@@ -21,9 +32,14 @@ export const useAuthStore = defineStore('auth', {
 
                 this.token = response.data.token;
                 this.user = {
+                    id: response.data.id,
                     nomeUsuario: response.data.nomeUsuario,
                     email: response.data.email,
-                    isAdmin: response.data.isAdmin
+                    isAdmin: response.data.isAdmin,
+                    jobTitle: response.data.jobTitle,
+                    phone: response.data.phone,
+                    bio: response.data.bio,
+                    isTwoFactorEnabled: response.data.isTwoFactorEnabled
                 };
 
                 localStorage.setItem('token', this.token);
@@ -42,9 +58,14 @@ export const useAuthStore = defineStore('auth', {
 
                 this.token = response.data.token;
                 this.user = {
+                    id: response.data.id,
                     nomeUsuario: response.data.nomeUsuario,
                     email: response.data.email,
-                    isAdmin: response.data.isAdmin
+                    isAdmin: response.data.isAdmin,
+                    jobTitle: response.data.jobTitle,
+                    phone: response.data.phone,
+                    bio: response.data.bio,
+                    isTwoFactorEnabled: response.data.isTwoFactorEnabled
                 };
 
                 localStorage.setItem('token', this.token);
@@ -61,7 +82,7 @@ export const useAuthStore = defineStore('auth', {
         async fetchUser() {
             try {
                 const response = await api.get('/users/me');
-                this.user = { ...this.user, ...response.data };
+                this.user = response.data;
                 localStorage.setItem('user', JSON.stringify(this.user));
             } catch (error) {
                 console.error('Failed to fetch user profile', error);
@@ -74,11 +95,25 @@ export const useAuthStore = defineStore('auth', {
             localStorage.removeItem('user');
             router.push('/login');
         },
-        async updateProfile(data: { nomeUsuario: string; email: string }) {
+        async updateProfile(data: Partial<User>) {
             try {
-                const response = await api.put('/users/me', data);
-                this.user = { ...this.user, ...response.data };
+                const response = await api.put(`/users/${(this.user as any)?.id || 'me'}`, data);
+                // Note: The API endpoint logic might need adjustment. 
+                // Controller has [HttpPut("{id}")] for UpdateUser and [HttpPut("me/password")]
+                // We should probably rely on UpdateUser(id, DTO). 
+                // Wait, UsersController has UpdateUser at PUT /api/users/{id}
+                // But typically for self-update we might want a specific endpoint or use ID.
+                // Let's check UsersController. It has GetMe but not UpdateMe (except password).
+                // Ah, UpdateUser is PUT /api/users/{id}. 
+                // Since user is logged in, we can get ID from store.
+
+                // Correction: The users/me endpoint was GET only.
+                // We need to use PUT /api/users/{id}.
+
+                this.user = { ...this.user, ...data } as User;
                 localStorage.setItem('user', JSON.stringify(this.user));
+
+                // Ideally backend returns updated user.
             } catch (error) {
                 console.error('Profile update failed', error);
                 throw error;
