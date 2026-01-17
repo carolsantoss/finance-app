@@ -115,66 +115,94 @@ namespace FinanceApp.API.Controllers
         [AllowAnonymous] // We will check a specific header "X-Scheduler-Secret"
         public async Task<IActionResult> ProcessRecurringTransactions([FromHeader(Name = "X-Scheduler-Secret")] string? secret)
         {
-            // Simple security check for the scheduler
-            // Fetch secret from DB or Env
-            var dbSecret = (await _context.systemSettings.FindAsync("SchedulerSecret"))?.Value;
-            var envSecret = Environment.GetEnvironmentVariable("SCHEDULER_SECRET") ?? "DefaultSecret123";
+            var log = new IntegrationLog { nm_integration = "Scheduler/RecurringTransactions", ds_ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown" };
             
-            // Allow either DB-generated secret OR Env var (for legacy/ops support)
-            if (secret != dbSecret && secret != envSecret)
+            try 
             {
-                return Unauthorized("Invalid Scheduler Secret");
-            }
-
-            var activeRecurring = await _context.recurringTransactions
-                .Where(r => r.fl_ativo)
-                .ToListAsync();
-
-            int processedCount = 0;
-            var today = DateTime.Today;
-
-            foreach (var r in activeRecurring)
-            {
-                // Check if expired
-                if (r.dt_fim.HasValue && r.dt_fim.Value < today) continue;
-
-                var nextDueDate = CalculateNextDueDate(r);
-
-                // If due date is today or in the past, process it
-                if (nextDueDate <= today)
+                // Simple security check for the scheduler
+                // Fetch secret from DB or Env
+                var dbSecret = (await _context.systemSettings.FindAsync("SchedulerSecret"))?.Value;
+                var envSecret = Environment.GetEnvironmentVariable("SCHEDULER_SECRET") ?? "DefaultSecret123";
+                
+                // Allow either DB-generated secret OR Env var (for legacy/ops support)
+                if (secret != dbSecret && secret != envSecret)
                 {
-                    // Create Lancamento
-                    var lancamento = new Lancamento
-                    {
-                        id_usuario = r.id_usuario,
-                        nm_descricao = r.nm_descricao + " (Recorrente)",
-                        nr_valor = r.nr_valor,
-                        nm_tipo = r.nm_tipo,
-                        dt_dataLancamento = nextDueDate, // Create with the actual due date
-                        nm_formaPagamento = r.id_credit_card.HasValue ? "Crédito" : "Débito",
-                        nr_parcelas = 1,
-                        nr_parcelaInicial = 1,
-                        nr_parcelasPagas = r.nm_tipo == "Saída" ? 0 : 1, // Income is usually paid immediately? Or follow logic.
-                        id_categoria = r.id_categoria,
-                        id_wallet = r.id_wallet,
-                        id_credit_card = r.id_credit_card
-                    };
-
-                    _context.lancamentos.Add(lancamento);
-                    
-                    // Update last processed date
-                    // If we processed it for Date X, update LastProcessed to Date X
-                    r.dt_ultimaProcessamento = nextDueDate;
-                    processedCount++;
+                    log.ds_status = "Error";
+                    log.ds_message = "Authentication Failed";
+                    log.ds_details = "Invalid Secret Key provided.";
+                    _context.integrationLogs.Add(log);
+                    await _context.SaveChangesAsync();
+                    return Unauthorized("Invalid Scheduler Secret");
                 }
-            }
 
-            if (processedCount > 0)
-            {
+                var activeRecurring = await _context.recurringTransactions
+                    .Where(r => r.fl_ativo)
+                    .ToListAsync();
+
+                int processedCount = 0;
+                var today = DateTime.Today;
+                var processedDetails = new List<string>();
+
+                foreach (var r in activeRecurring)
+                {
+                    // Check if expired
+                    if (r.dt_fim.HasValue && r.dt_fim.Value < today) continue;
+
+                    var nextDueDate = CalculateNextDueDate(r);
+
+                    // If due date is today or in the past, process it
+                    if (nextDueDate <= today)
+                    {
+                        // Create Lancamento
+                        var lancamento = new Lancamento
+                        {
+                            id_usuario = r.id_usuario,
+                            nm_descricao = r.nm_descricao + " (Recorrente)",
+                            nr_valor = r.nr_valor,
+                            nm_tipo = r.nm_tipo,
+                            dt_dataLancamento = nextDueDate, // Create with the actual due date
+                            nm_formaPagamento = r.id_credit_card.HasValue ? "Crédito" : "Débito",
+                            nr_parcelas = 1,
+                            nr_parcelaInicial = 1,
+                            nr_parcelasPagas = r.nm_tipo == "Saída" ? 0 : 1, // Income is usually paid immediately? Or follow logic.
+                            id_categoria = r.id_categoria,
+                            id_wallet = r.id_wallet,
+                            id_credit_card = r.id_credit_card
+                        };
+
+                        _context.lancamentos.Add(lancamento);
+                        
+                        // Update last processed date
+                        // If we processed it for Date X, update LastProcessed to Date X
+                        r.dt_ultimaProcessamento = nextDueDate;
+                        processedCount++;
+                        processedDetails.Add($"Processed: {r.nm_descricao} (ID: {r.id_transacaoRecorrente}) for User {r.id_usuario} on {nextDueDate.ToShortDateString()}");
+                    }
+                }
+
+                if (processedCount > 0)
+                {
+                    await _context.SaveChangesAsync();
+                }
+
+                log.ds_status = "Success";
+                log.ds_message = $"Processed {processedCount} transactions.";
+                log.ds_details = processedCount > 0 ? string.Join("; ", processedDetails) : "No transactions due.";
+                
+                _context.integrationLogs.Add(log);
                 await _context.SaveChangesAsync();
-            }
 
-            return Ok(new { Message = "Processing completed", ProcessedCount = processedCount });
+                return Ok(new { Message = "Processing completed", ProcessedCount = processedCount });
+            }
+            catch (Exception ex)
+            {
+                log.ds_status = "Error";
+                log.ds_message = "Exception during processing";
+                log.ds_details = ex.ToString();
+                _context.integrationLogs.Add(log);
+                await _context.SaveChangesAsync();
+                return StatusCode(500, "Internal Server Error");
+            }
         }
 
         private DateTime CalculateNextDueDate(RecurringTransaction r)

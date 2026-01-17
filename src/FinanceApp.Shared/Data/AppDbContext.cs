@@ -22,6 +22,7 @@ namespace FinanceApp.Shared.Data
         public DbSet<Feature> features { get; set; }
         public DbSet<PlanFeature> planFeatures { get; set; }
         public DbSet<SystemSetting> systemSettings { get; set; }
+        public DbSet<IntegrationLog> integrationLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

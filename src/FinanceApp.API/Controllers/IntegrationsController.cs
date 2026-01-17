@@ -57,5 +57,14 @@ namespace FinanceApp.API.Controllers
 
             return Ok(new { Token = setting.Value });
         }
+
+        [HttpGet("logs")]
+        public async Task<ActionResult<IEnumerable<IntegrationLog>>> GetLogs()
+        {
+            return await _context.integrationLogs
+                .OrderByDescending(l => l.dt_log)
+                .Take(50)
+                .ToListAsync();
+        }
     }
 }
