@@ -46,6 +46,16 @@ const router = createRouter({
                     component: () => import('../views/settings/WalletsView.vue')
                 },
                 {
+                    path: '/planning/budgets',
+                    name: 'Budgets',
+                    component: () => import('../views/BudgetsView.vue')
+                },
+                {
+                    path: '/planning/recurring',
+                    name: 'Recurring',
+                    component: () => import('../views/RecurringView.vue')
+                },
+                {
                     path: '/admin/users',
                     name: 'AdminUsers',
                     component: () => import('../views/admin/AdminUsers.vue'),

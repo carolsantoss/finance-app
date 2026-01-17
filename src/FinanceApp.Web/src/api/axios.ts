@@ -17,12 +17,31 @@ if (useMock) {
     setupMock(api);
 }
 
+import { useUIStore } from '../stores/ui';
+
 api.interceptors.request.use(config => {
+    const ui = useUIStore();
+    ui.startLoading();
+
     const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
+}, error => {
+    const ui = useUIStore();
+    ui.stopLoading();
+    return Promise.reject(error);
+});
+
+api.interceptors.response.use(response => {
+    const ui = useUIStore();
+    ui.stopLoading();
+    return response;
+}, error => {
+    const ui = useUIStore();
+    ui.stopLoading();
+    return Promise.reject(error);
 });
 
 export default api;

@@ -13,7 +13,8 @@ import {
     X,
     Plus,
     Shield,
-    Tag
+    Tag,
+    RefreshCw
 } from 'lucide-vue-next';
 
 const auth = useAuthStore();
@@ -58,6 +59,21 @@ const isSidebarOpen = ref(false);
                 :class="$route.path.includes('/wallets') ? 'bg-[#00875F]/10 text-[#00875F] border border-[#00875F]/20' : 'text-gray-400 hover:text-white hover:bg-[#29292E]'">
                     <Wallet class="w-5 h-5" />
                     <span>Carteiras e Cartões</span>
+                </router-link>
+
+                <div class="px-4 pt-4 pb-2">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Planejamento</p>
+                </div>
+
+                <router-link to="/planning/budgets" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                :class="$route.path.includes('/budgets') ? 'bg-[#00875F]/10 text-[#00875F] border border-[#00875F]/20' : 'text-gray-400 hover:text-white hover:bg-[#29292E]'">
+                    <TrendingUp class="w-5 h-5" />
+                    <span>Orçamentos</span>
+                </router-link>
+                <router-link to="/planning/recurring" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                :class="$route.path.includes('/recurring') ? 'bg-[#00875F]/10 text-[#00875F] border border-[#00875F]/20' : 'text-gray-400 hover:text-white hover:bg-[#29292E]'">
+                    <RefreshCw class="w-5 h-5" />
+                    <span>Recorrência</span>
                 </router-link>
                 <!-- Admin Link -->
                 <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
