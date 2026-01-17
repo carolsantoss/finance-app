@@ -14,6 +14,11 @@ export const useAuthStore = defineStore('auth', {
         async login(credentials: { email: string; senha: string; rememberMe: boolean }) {
             try {
                 const response = await api.post('/auth/login', credentials);
+
+                if (response.data.requiresTwoFactor) {
+                    return response.data; // Component handles 2FA step
+                }
+
                 this.token = response.data.token;
                 this.user = {
                     nomeUsuario: response.data.nomeUsuario,
@@ -25,8 +30,30 @@ export const useAuthStore = defineStore('auth', {
                 localStorage.setItem('user', JSON.stringify(this.user));
 
                 router.push('/');
+                return response.data;
             } catch (error) {
                 console.error('Login failed', error);
+                throw error;
+            }
+        },
+        async login2FA(data: { email: string; code: string }) {
+            try {
+                const response = await api.post('/auth/login-2fa', data);
+
+                this.token = response.data.token;
+                this.user = {
+                    nomeUsuario: response.data.nomeUsuario,
+                    email: response.data.email,
+                    isAdmin: response.data.isAdmin
+                };
+
+                localStorage.setItem('token', this.token);
+                localStorage.setItem('user', JSON.stringify(this.user));
+
+                router.push('/');
+                return response.data;
+            } catch (error) {
+                console.error('2FA Login failed', error);
                 throw error;
             }
         },

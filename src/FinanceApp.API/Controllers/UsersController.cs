@@ -31,7 +31,8 @@ namespace FinanceApp.API.Controllers
                 Id = u.id_usuario,
                 NomeUsuario = u.nm_nomeUsuario,
                 Email = u.nm_email,
-                IsAdmin = u.fl_admin
+                IsAdmin = u.fl_admin,
+                IsTwoFactorEnabled = u.fl_2faHabilitado
             }));
         }
 
@@ -52,7 +53,8 @@ namespace FinanceApp.API.Controllers
                 Id = user.id_usuario,
                 NomeUsuario = user.nm_nomeUsuario,
                 Email = user.nm_email,
-                IsAdmin = user.fl_admin
+                IsAdmin = user.fl_admin,
+                IsTwoFactorEnabled = user.fl_2faHabilitado
             });
         }
 
@@ -104,7 +106,8 @@ namespace FinanceApp.API.Controllers
                 Id = user.id_usuario,
                 NomeUsuario = user.nm_nomeUsuario,
                 Email = user.nm_email,
-                IsAdmin = user.fl_admin
+                IsAdmin = user.fl_admin,
+                IsTwoFactorEnabled = user.fl_2faHabilitado
             });
         }
 
@@ -171,6 +174,7 @@ namespace FinanceApp.API.Controllers
         public string NomeUsuario { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public bool IsAdmin { get; set; }
+        public bool IsTwoFactorEnabled { get; set; }
     }
 
     public class CreateUserDTO

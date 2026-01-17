@@ -11,6 +11,16 @@ const router = createRouter({
             component: () => import('../views/Login.vue')
         },
         {
+            path: '/forgot-password',
+            name: 'ForgotPassword',
+            component: () => import('../views/auth/ForgotPassword.vue')
+        },
+        {
+            path: '/reset-password',
+            name: 'ResetPassword',
+            component: () => import('../views/auth/ResetPassword.vue')
+        },
+        {
             path: '/lancamento',
             name: 'Lancamento',
             component: () => import('../views/Lancamento.vue'),

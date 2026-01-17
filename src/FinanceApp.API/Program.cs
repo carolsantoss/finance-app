@@ -5,6 +5,35 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
+
+// Load .env file (Search in current dir and up to 3 parent dirs)
+var currentSearchPath = AppDomain.CurrentDomain.BaseDirectory;
+string? envPath = null;
+
+for (int i = 0; i < 4; i++)
+{
+    var candidate = Path.Combine(currentSearchPath, ".env");
+    if (File.Exists(candidate))
+    {
+        envPath = candidate;
+        break;
+    }
+    
+    var parent = Directory.GetParent(currentSearchPath);
+    if (parent == null) break;
+    currentSearchPath = parent.FullName;
+}
+
+if (envPath != null)
+{
+    DotNetEnv.Env.Load(envPath);
+    Console.WriteLine($"[INFO] Loaded .env from {envPath}");
+}
+else
+{
+    Console.WriteLine($"[WARN] .env not found at {envPath}");
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -36,34 +65,6 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-
-// Load .env file (Search in current dir and up to 3 parent dirs)
-var currentSearchPath = AppDomain.CurrentDomain.BaseDirectory;
-string? envPath = null;
-
-for (int i = 0; i < 4; i++)
-{
-    var candidate = Path.Combine(currentSearchPath, ".env");
-    if (File.Exists(candidate))
-    {
-        envPath = candidate;
-        break;
-    }
-    
-    var parent = Directory.GetParent(currentSearchPath);
-    if (parent == null) break;
-    currentSearchPath = parent.FullName;
-}
-
-if (envPath != null)
-{
-    DotNetEnv.Env.Load(envPath);
-    Console.WriteLine($"[INFO] Loaded .env from {envPath}");
-}
-else
-{
-    Console.WriteLine($"[WARN] .env not found at {envPath}");
-}
 
 // Database
 var connectionString = $"Server={Environment.GetEnvironmentVariable("DB_SERVER") ?? "localhost"};" +
@@ -112,6 +113,9 @@ builder.Services.AddCors(options =>
                    .AllowAnyHeader();
         });
 });
+
+// Services
+builder.Services.AddScoped<FinanceApp.API.Services.IEmailService, FinanceApp.API.Services.EmailService>();
 
 var app = builder.Build();
 

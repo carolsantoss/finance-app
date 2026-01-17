@@ -14,5 +14,15 @@ namespace FinanceApp.Shared.Models
         public string hs_senha { get; set; } = string.Empty;
 
         public bool fl_admin { get; set; } = false;
+
+        // Security Fields
+        public bool fl_emailConfirmado { get; set; } = false;
+        public string? cd_tokenConfirmacao { get; set; }
+        
+        public string? cd_tokenRecuperacao { get; set; }
+        public DateTime? dt_expiracaoToken { get; set; }
+        
+        public bool fl_2faHabilitado { get; set; } = false;
+        public string? cd_segredo2FA { get; set; }
     }
 }
