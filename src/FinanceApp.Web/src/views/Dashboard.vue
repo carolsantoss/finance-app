@@ -98,9 +98,9 @@ const formatCurrency = (value: number) => {
                         <div class="relative z-10">
                             <p class="text-text-secondary font-medium mb-1">Saldo Total</p>
                             <h3 class="text-3xl font-bold text-text-primary">{{ formatCurrency(finance.summary.saldo) }}</h3>
-                            <div class="mt-4 flex items-center text-sm" :class="finance.summary.saldo >= 0 ? 'text-[#00B37E]' : 'text-[#F75A68]'">
-                                <TrendingUp class="w-4 h-4 mr-1" />
-                                <span>{{ finance.summary.saldo >= 0 ? '+' : '' }}12.5% vs mês anterior</span>
+                            <div class="mt-4 flex items-center text-sm" :class="finance.summary.percentageChange >= 0 ? 'text-[#00B37E]' : 'text-[#F75A68]'">
+                                <TrendingUp class="w-4 h-4 mr-1" :class="finance.summary.percentageChange < 0 ? 'rotate-180' : ''" />
+                                <span>{{ finance.summary.percentageChange >= 0 ? '+' : '' }}{{ finance.summary.percentageChange.toFixed(1) }}% vs mês anterior</span>
                             </div>
                         </div>
                     </div>

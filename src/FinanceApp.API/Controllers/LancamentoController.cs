@@ -107,13 +107,40 @@ namespace FinanceApp.API.Controllers
                 .Where(l => l.id_usuario == userId)
                 .ToListAsync();
             
+            var now = DateTime.UtcNow;
+            var firstDayOfCurrentMonth = new DateTime(now.Year, now.Month, 1);
+            var endOfLastMonth = firstDayOfCurrentMonth.AddSeconds(-1);
+
+            // Current Balance (All time)
             var entradas = lancamentos.Where(l => l.nm_tipo == "Entrada").Sum(l => l.nr_valor);
             var saidas = lancamentos.Where(l => l.nm_tipo == "Saída").Sum(l => l.nr_valor);
+            var currentBalance = entradas - saidas;
+
+            // Previous Balance (Up to end of last month)
+            var previousEntradas = lancamentos
+                .Where(l => l.nm_tipo == "Entrada" && l.dt_dataLancamento <= endOfLastMonth)
+                .Sum(l => l.nr_valor);
+            var previousSaidas = lancamentos
+                .Where(l => l.nm_tipo == "Saída" && l.dt_dataLancamento <= endOfLastMonth)
+                .Sum(l => l.nr_valor);
+            var previousBalance = previousEntradas - previousSaidas;
+
+            // Calculate Percentage Change
+            decimal percentageChange = 0;
+            if (previousBalance != 0)
+            {
+                percentageChange = ((currentBalance - previousBalance) / Math.Abs(previousBalance)) * 100;
+            }
+            else if (currentBalance != 0)
+            {
+                 percentageChange = 100; // From 0 to something is 100% (or infinite, but 100 is safer for UI)
+            }
 
             return Ok(new DashboardSummary
             {
                 Entradas = entradas,
-                Saidas = saidas
+                Saidas = saidas,
+                PercentageChange = percentageChange
             });
         }
 

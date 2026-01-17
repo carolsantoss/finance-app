@@ -15,7 +15,7 @@ const editingItem = ref<any>(null);
 
 const form = ref({
     descricao: '',
-    valor: '',
+    valor: 0,
     tipo: 'Saída',
     categoryId: '',
     walletId: '',
@@ -25,6 +25,27 @@ const form = ref({
     dataFim: '',
     ativo: true
 });
+
+const valorDisplay = ref('');
+
+const formatCurrencyInput = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/\D/g, '');
+    
+    if (!value) {
+        form.value.valor = 0;
+        valorDisplay.value = '';
+        return;
+    }
+
+    const numericValue = parseInt(value) / 100;
+    form.value.valor = numericValue;
+    
+    valorDisplay.value = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(numericValue);
+};
 
 onMounted(async () => {
     await Promise.all([
@@ -42,7 +63,7 @@ const openModal = (item: any = null) => {
     if (item) {
         form.value = {
             descricao: item.descricao,
-            valor: item.valor.toString(),
+            valor: item.valor,
             tipo: item.tipo,
             categoryId: item.categoryId,
             walletId: item.walletId,
@@ -52,10 +73,11 @@ const openModal = (item: any = null) => {
             dataFim: item.dataFim ? item.dataFim.split('T')[0] : '',
             ativo: item.ativo
         };
+        valorDisplay.value = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor);
     } else {
         form.value = {
             descricao: '',
-            valor: '',
+            valor: 0,
             tipo: 'Saída',
             categoryId: '',
             walletId: '',
@@ -65,6 +87,7 @@ const openModal = (item: any = null) => {
             dataFim: '',
             ativo: true
         };
+        valorDisplay.value = '';
     }
     isModalOpen.value = true;
 };
@@ -74,7 +97,7 @@ const save = async () => {
 
     const payload = {
         descricao: form.value.descricao,
-        valor: parseFloat(form.value.valor),
+        valor: form.value.valor,
         tipo: form.value.tipo,
         categoryId: form.value.categoryId || null,
         walletId: form.value.walletId || null,
@@ -94,11 +117,10 @@ const save = async () => {
 };
 
 const toggleStatus = async (item: any) => {
-    // Only update the status
     await planning.updateRecurringTransaction(item.id, {
         ...item,
         ativo: !item.ativo,
-        categoryId: item.categoryId || null, // Ensure explicit null
+        categoryId: item.categoryId || null,
         walletId: item.walletId || null,
         creditCardId: item.creditCardId || null,
         dataInicio: new Date(item.dataInicio),
@@ -181,7 +203,13 @@ const formatCurrency = (value: number) => {
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-400 mb-1">Valor (R$)</label>
-                            <input v-model="form.valor" type="number" step="0.01" class="w-full bg-[#121214] border border-[#323238] rounded-lg p-3 text-white focus:border-[#00875F] outline-none">
+                            <input 
+                                :value="valorDisplay" 
+                                @input="formatCurrencyInput"
+                                type="text" 
+                                placeholder="R$ 0,00"
+                                class="w-full bg-[#121214] border border-[#323238] rounded-lg p-3 text-white focus:border-[#00875F] outline-none"
+                            >
                         </div>
                         <div>
                              <label class="block text-sm font-medium text-gray-400 mb-1">Tipo</label>

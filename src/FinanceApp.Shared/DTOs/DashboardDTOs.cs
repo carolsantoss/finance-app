@@ -5,6 +5,7 @@ namespace FinanceApp.Shared.DTOs
         public decimal Entradas { get; set; }
         public decimal Saidas { get; set; }
         public decimal Saldo => Entradas - Saidas;
+        public decimal PercentageChange { get; set; }
     }
 
     public class MonthlyFinancialData

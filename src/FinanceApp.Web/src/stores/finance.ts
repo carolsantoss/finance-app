@@ -4,7 +4,7 @@ import api from '../api/axios';
 export const useFinanceStore = defineStore('finance', {
     state: () => ({
         transactions: [] as any[],
-        summary: { entradas: 0, saidas: 0, saldo: 0 },
+        summary: { entradas: 0, saidas: 0, saldo: 0, percentageChange: 0 },
         chartData: { labels: [], incomeData: [], expenseData: [] }, // Default empty state
         isLoading: false
     }),
