@@ -11,6 +11,8 @@ interface User {
     phone?: string;
     bio?: string;
     isTwoFactorEnabled?: boolean;
+    referralCode?: string;
+    referralCount?: number;
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -39,7 +41,9 @@ export const useAuthStore = defineStore('auth', {
                     jobTitle: response.data.jobTitle,
                     phone: response.data.phone,
                     bio: response.data.bio,
-                    isTwoFactorEnabled: response.data.isTwoFactorEnabled
+                    isTwoFactorEnabled: response.data.isTwoFactorEnabled,
+                    referralCode: response.data.referralCode,
+                    referralCount: response.data.referralCount
                 };
 
                 localStorage.setItem('token', this.token);
@@ -65,7 +69,9 @@ export const useAuthStore = defineStore('auth', {
                     jobTitle: response.data.jobTitle,
                     phone: response.data.phone,
                     bio: response.data.bio,
-                    isTwoFactorEnabled: response.data.isTwoFactorEnabled
+                    isTwoFactorEnabled: response.data.isTwoFactorEnabled,
+                    referralCode: response.data.referralCode,
+                    referralCount: response.data.referralCount
                 };
 
                 localStorage.setItem('token', this.token);
@@ -78,7 +84,17 @@ export const useAuthStore = defineStore('auth', {
                 throw error;
             }
         },
-        // Register action removed as public registration is disabled
+        async register(userData: any) {
+            try {
+                // userData includes referralCode if present
+                await api.post('/auth/register', userData);
+                // After register, redirect to login
+                router.push('/login');
+            } catch (error) {
+                console.error('Registration failed', error);
+                throw error;
+            }
+        },
         async fetchUser() {
             try {
                 const response = await api.get('/users/me');
@@ -124,6 +140,15 @@ export const useAuthStore = defineStore('auth', {
                 await api.put('/users/me/password', data);
             } catch (error) {
                 console.error('Password change failed', error);
+                throw error;
+            }
+        },
+        async validateReferral(code: string) {
+            try {
+                const response = await api.get(`/auth/validate-referral/${code}`);
+                return response.data; // { valid: true, referrerName: '...' }
+            } catch (error) {
+                // If 404, it means invalid
                 throw error;
             }
         }

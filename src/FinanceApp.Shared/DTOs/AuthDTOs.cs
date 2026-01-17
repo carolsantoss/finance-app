@@ -14,6 +14,7 @@ namespace FinanceApp.Shared.DTOs
         public string NomeUsuario { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Senha { get; set; } = string.Empty;
+        public string? ReferralCode { get; set; }
     }
 
     public class LoginResponse
@@ -32,6 +33,12 @@ namespace FinanceApp.Shared.DTOs
 
         [JsonPropertyName("requiresTwoFactor")]
         public bool RequiresTwoFactor { get; set; } = false;
+
+        [JsonPropertyName("referralCode")]
+        public string? ReferralCode { get; set; }
+
+        [JsonPropertyName("referralCount")]
+        public int ReferralCount { get; set; }
     }
 
     public class ForgotPasswordRequest

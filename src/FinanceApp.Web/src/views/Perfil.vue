@@ -6,7 +6,7 @@ import { useToastStore } from '../stores/toast';
 import { 
     User, Lock, Settings, Download, LogOut, 
     Save, Key, ShieldCheck, Mail, Briefcase, Phone, Info,
-    Moon, Sun, Bell, Monitor
+    Moon, Sun, Bell, Monitor, Share2, Copy
 } from 'lucide-vue-next';
 import api from '../api/axios';
 import QRCode from 'qrcode';
@@ -21,6 +21,7 @@ const tabs = [
     { id: 'general', label: 'Geral', icon: User },
     { id: 'security', label: 'Segurança', icon: Lock },
     { id: 'preferences', label: 'Preferências', icon: Settings },
+    { id: 'referral', label: 'Indicações', icon: Share2 },
     { id: 'data', label: 'Dados', icon: Download },
 ];
 
@@ -175,6 +176,17 @@ const downloadExport = async () => {
         console.error(error);
         toast.error('Erro ao exportar dados.');
     }
+};
+
+
+const referralLink = computed(() => {
+    const code = (auth.user as any)?.referralCode || '';
+    return `${window.location.origin}/register?ref=${code}`;
+});
+
+const copyReferralLink = () => {
+    navigator.clipboard.writeText(referralLink.value);
+    toast.success('Link copiado!');
 };
 </script>
 
@@ -393,6 +405,38 @@ const downloadExport = async () => {
                                 <div class="w-12 h-6 bg-border rounded-full relative cursor-pointer">
                                     <div class="absolute left-1 top-1 w-4 h-4 bg-text-tertiary rounded-full shadow-sm"></div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Referral Tab -->
+                    <div v-if="activeTab === 'referral'" class="p-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <h3 class="text-lg font-bold text-text-primary mb-2">Programa de Indicação</h3>
+                        <p class="text-sm text-text-secondary mb-8">Convide amigos e ganhe recompensas no futuro!</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Link Card -->
+                            <div class="p-6 bg-gradient-to-br from-brand/10 to-transparent border border-brand/20 rounded-xl">
+                                <h4 class="font-bold text-brand mb-4 flex items-center gap-2">
+                                    <Share2 class="w-5 h-5" /> Seu Link de Convite
+                                </h4>
+                                <div class="flex gap-2">
+                                    <input 
+                                        readonly 
+                                        :value="referralLink" 
+                                        class="flex-1 bg-black/20 border border-brand/20 rounded-md px-3 py-2 text-sm text-text-primary"
+                                    />
+                                    <button @click="copyReferralLink" class="p-2 bg-brand text-white rounded-md hover:bg-brand-hover transition-colors">
+                                        <Copy class="w-4 h-4" />
+                                    </button>
+                                </div>
+                                <p class="text-xs text-text-secondary mt-3">Envie este link para seus amigos criarem uma conta.</p>
+                            </div>
+
+                            <!-- Link Stats -->
+                            <div class="p-6 bg-card border border-border rounded-xl flex flex-col items-center justify-center text-center">
+                                <span class="text-4xl font-bold text-white mb-2">{{ (auth.user as any)?.referralCount || 0 }}</span>
+                                <span class="text-sm text-text-secondary font-medium uppercase tracking-wider">Amigos Indicados</span>
                             </div>
                         </div>
                     </div>

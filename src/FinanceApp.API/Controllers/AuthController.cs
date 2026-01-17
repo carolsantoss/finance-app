@@ -50,6 +50,13 @@ namespace FinanceApp.API.Controllers
                 });
             }
 
+            // Lazy Generation
+            if (string.IsNullOrEmpty(user.cd_referralCode))
+            {
+                user.cd_referralCode = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
+                await _context.SaveChangesAsync();
+            }
+
             var token = GenerateToken(user, request.RememberMe);
 
             return Ok(new LoginResponse
@@ -57,8 +64,67 @@ namespace FinanceApp.API.Controllers
                 Token = token,
                 NomeUsuario = user.nm_nomeUsuario,
                 Email = user.nm_email,
-                IsAdmin = user.fl_admin
+                IsAdmin = user.fl_admin,
+                ReferralCode = user.cd_referralCode,
+                ReferralCount = user.nr_indicacoes
             });
+
+        }
+
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            if (await _context.users.AnyAsync(u => u.nm_email == request.Email))
+            {
+                return BadRequest("Email já cadastrado");
+            }
+
+            User? referrer = null;
+            if (string.IsNullOrEmpty(request.ReferralCode))
+            {
+                return BadRequest("Código de convite é obrigatório.");
+            }
+
+            referrer = await _context.users.FirstOrDefaultAsync(u => u.cd_referralCode == request.ReferralCode);
+            if (referrer == null)
+            {
+                return BadRequest("Código de convite inválido.");
+            }
+            
+            referrer.nr_indicacoes++;
+
+            var user = new User
+            {
+                nm_nomeUsuario = request.NomeUsuario,
+                nm_email = request.Email,
+                hs_senha = PasswordHelper.Hash(request.Senha),
+                fl_admin = false, // Public registration is never admin
+                cd_referralCode = Guid.NewGuid().ToString().Substring(0, 8).ToUpper(), // Generate unique code
+                id_referrer = referrer?.id_usuario
+            };
+
+            _context.users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Conta criada com sucesso" });
+        }
+
+        [HttpGet("validate-referral/{code}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ValidateReferral(string code)
+        {
+            var referrer = await _context.users
+                .Where(u => u.cd_referralCode == code)
+                .Select(u => new { u.nm_nomeUsuario })
+                .FirstOrDefaultAsync();
+
+            if (referrer == null)
+            {
+                return NotFound(new { message = "Código inválido" });
+            }
+
+            return Ok(new { valid = true, referrerName = referrer.nm_nomeUsuario });
         }
 
         [HttpPost("forgot-password")]
@@ -190,6 +256,13 @@ namespace FinanceApp.API.Controllers
                 return Unauthorized("Código 2FA inválido.");
             }
 
+            // Lazy Generation
+            if (string.IsNullOrEmpty(user.cd_referralCode))
+            {
+                user.cd_referralCode = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
+                await _context.SaveChangesAsync();
+            }
+
             var token = GenerateToken(user, true); // Assuming rememberMe true or passed in request?
 
             return Ok(new LoginResponse
@@ -197,7 +270,9 @@ namespace FinanceApp.API.Controllers
                 Token = token,
                 NomeUsuario = user.nm_nomeUsuario,
                 Email = user.nm_email,
-                IsAdmin = user.fl_admin
+                IsAdmin = user.fl_admin,
+                ReferralCode = user.cd_referralCode,
+                ReferralCount = user.nr_indicacoes
             });
         }
 

@@ -11,6 +11,11 @@ const router = createRouter({
             component: () => import('../views/Login.vue')
         },
         {
+            path: '/register',
+            name: 'Register',
+            component: () => import('../views/Register.vue')
+        },
+        {
             path: '/forgot-password',
             name: 'ForgotPassword',
             component: () => import('../views/auth/ForgotPassword.vue')
@@ -106,8 +111,8 @@ router.beforeEach((to, from, next) => {
         }
     }
 
-    // Redirect logic for logged in users trying to access login
-    if (to.name === 'Login' && authStore.isAuthenticated) {
+    // Redirect logic for logged in users trying to access login or register
+    if ((to.name === 'Login' || to.name === 'Register') && authStore.isAuthenticated) {
         next('/');
         return;
     }

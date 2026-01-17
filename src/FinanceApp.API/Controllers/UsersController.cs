@@ -51,6 +51,13 @@ namespace FinanceApp.API.Controllers
 
             if (user == null) return NotFound();
 
+            // Lazy Generation of Referral Code for existing users
+            if (string.IsNullOrEmpty(user.cd_referralCode))
+            {
+                user.cd_referralCode = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
+                await _context.SaveChangesAsync();
+            }
+
             return Ok(new UserDTO
             {
                 Id = user.id_usuario,
@@ -60,7 +67,9 @@ namespace FinanceApp.API.Controllers
                 IsTwoFactorEnabled = user.fl_2faHabilitado,
                 JobTitle = user.nm_funcao,
                 Phone = user.nr_telefone,
-                Bio = user.ds_sobre
+                Bio = user.ds_sobre,
+                ReferralCode = user.cd_referralCode,
+                ReferralCount = user.nr_indicacoes
             });
         }
 
@@ -191,6 +200,9 @@ namespace FinanceApp.API.Controllers
         public string? JobTitle { get; set; }
         public string? Phone { get; set; }
         public string? Bio { get; set; }
+
+        public string? ReferralCode { get; set; }
+        public int ReferralCount { get; set; }
     }
 
     public class CreateUserDTO

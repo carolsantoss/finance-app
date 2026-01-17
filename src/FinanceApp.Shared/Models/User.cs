@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinanceApp.Shared.Models
 {
@@ -29,5 +30,15 @@ namespace FinanceApp.Shared.Models
         
         public bool fl_2faHabilitado { get; set; } = false;
         public string? cd_segredo2FA { get; set; }
+
+        // Referral System
+        public string? cd_referralCode { get; set; } // Unique Code
+        
+        public int? id_referrer { get; set; } // Who invited me
+        
+        [ForeignKey("id_referrer")]
+        public virtual User? Referrer { get; set; }
+        
+        public int nr_indicacoes { get; set; } = 0; // Count of referrals
     }
 }
