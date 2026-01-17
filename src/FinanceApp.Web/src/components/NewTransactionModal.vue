@@ -308,16 +308,19 @@ const close = () => {
                             <Layers class="w-4 h-4" />
                             <span class="text-sm font-medium">Parcelamento</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs text-gray-500 mb-1 block">Parcela Inicial</label>
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1">
+                                <label class="text-xs text-gray-500 mb-1 block text-center">Parcela Atual</label>
                                 <input v-model.number="form.nr_parcelaInicial" type="number" min="1" :max="form.nr_parcelas"
-                                    class="w-full bg-[#202024] border border-[#323238] rounded px-3 py-2 text-white text-sm focus:border-[#00875F] outline-none" />
+                                    class="w-full bg-[#202024] border border-[#323238] rounded px-3 py-2 text-white text-center text-lg font-medium focus:border-[#00875F] outline-none transition-colors" />
                             </div>
-                            <div>
-                                <label class="text-xs text-gray-500 mb-1 block">Total Parcelas</label>
+                            
+                            <div class="pt-5 text-gray-500 text-xl font-light">/</div>
+
+                            <div class="flex-1">
+                                <label class="text-xs text-gray-500 mb-1 block text-center">Total</label>
                                 <input v-model.number="form.nr_parcelas" type="number" min="1" max="120"
-                                    class="w-full bg-[#202024] border border-[#323238] rounded px-3 py-2 text-white text-sm focus:border-[#00875F] outline-none" />
+                                    class="w-full bg-[#202024] border border-[#323238] rounded px-3 py-2 text-white text-center text-lg font-medium focus:border-[#00875F] outline-none transition-colors" />
                             </div>
                         </div>
                     </div>
