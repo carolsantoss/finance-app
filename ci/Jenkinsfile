@@ -58,16 +58,14 @@ pipeline {
             steps {
                 dir("${TARGET_DIR}/src/FinanceApp.API") {
                     echo "Building .NET Backend..."
-                    // Restaura e publica localmente. 
-                    // Como estamos "rodando" do código fonte, talvez o usuário queira rodar 'dotnet run' ou 'dotnet publish' e apontar o serviço para o publish.
-                    // Assumindo estrutura do guia anterior: publish em /var/www ou rodar do próprio diretório /app?
-                    // O pedido diz: "la dentro estruturar o sistema e instalar/builder"
-                    // Vamos gerar o publish dentro de uma subpasta 'bin/Release/publish' ou similar, ou publicar para uma pasta 'out' interna
                     
-                    // Limpa diretório de publish anterior para evitar erros de cópia
-                    sh "rm -rf ./publish"
-                    sh "dotnet restore"
-                    sh "dotnet publish -c Release -o ./publish"
+                    // Configuração de proxy para o dotnet restore
+                    withEnv(["HTTP_PROXY=${PROXY_HOST}", "HTTPS_PROXY=${PROXY_HOST}", "DOTNET_CLI_TELEMETRY_OPTOUT=1"]) {
+                        // Limpa diretório de publish anterior para evitar erros de cópia
+                        sh "rm -rf ./publish"
+                        sh "dotnet restore"
+                        sh "dotnet publish -c Release -o ./publish"
+                    }
                 }
             }
         }
