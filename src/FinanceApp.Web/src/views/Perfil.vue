@@ -188,6 +188,44 @@ const copyReferralLink = () => {
     navigator.clipboard.writeText(referralLink.value);
     toast.success('Link copiado!');
 };
+
+// Preferences
+const preferences = ref({
+    darkMode: true,
+    notifications: false
+});
+
+const applyTheme = () => {
+    if (preferences.value.darkMode) {
+        document.documentElement.classList.remove('light');
+    } else {
+        document.documentElement.classList.add('light');
+    }
+};
+
+// Load preferences from localStorage
+const storedPrefs = localStorage.getItem('preferences');
+if (storedPrefs) {
+    preferences.value = JSON.parse(storedPrefs);
+    applyTheme(); // Apply on load
+}
+
+const togglePreference = (key: 'darkMode' | 'notifications') => {
+    try {
+        preferences.value[key] = !preferences.value[key];
+        localStorage.setItem('preferences', JSON.stringify(preferences.value));
+        
+        if (key === 'darkMode') {
+            applyTheme();
+            toast.success(preferences.value.darkMode ? 'Modo Escuro ativado.' : 'Modo Claro ativado.');
+        } else if (key === 'notifications') {
+            toast.success(`Notificações ${preferences.value.notifications ? 'ativadas' : 'desativadas'}.`);
+        }
+    } catch (e) {
+        console.error('Error toggling preference:', e);
+        alert('Erro ao alterar preferência');
+    }
+};
 </script>
 
 <template>
@@ -389,21 +427,23 @@ const copyReferralLink = () => {
                                         <p class="text-xs text-text-secondary">Alternar entre tema claro e escuro</p>
                                     </div>
                                 </div>
-                                <div class="w-12 h-6 bg-brand rounded-full relative cursor-pointer">
-                                    <div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
+                                <div @click="togglePreference('darkMode')" class="w-12 h-6 rounded-full relative cursor-pointer transition-colors" :class="preferences.darkMode ? 'bg-brand' : 'bg-gray-600'">
+                                    <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all" :class="preferences.darkMode ? 'right-1' : 'left-1'"></div>
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-between p-4 bg-input rounded-lg border border-border">
                                 <div class="flex items-center gap-4">
-                                    <Bell class="w-5 h-5 text-blue-400" />
+                                    <div class="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                                        <Bell class="w-5 h-5" />
+                                    </div>
                                     <div>
                                         <h4 class="font-bold text-text-primary">Notificações</h4>
                                         <p class="text-xs text-text-secondary">Receber alertas via email</p>
                                     </div>
                                 </div>
-                                <div class="w-12 h-6 bg-border rounded-full relative cursor-pointer">
-                                    <div class="absolute left-1 top-1 w-4 h-4 bg-text-tertiary rounded-full shadow-sm"></div>
+                                <div @click="togglePreference('notifications')" class="w-12 h-6 rounded-full relative cursor-pointer transition-colors" :class="preferences.notifications ? 'bg-brand' : 'bg-gray-600'">
+                                    <div class="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all" :class="preferences.notifications ? 'right-1' : 'left-1'"></div>
                                 </div>
                             </div>
                         </div>
