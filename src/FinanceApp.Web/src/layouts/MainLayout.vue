@@ -19,7 +19,8 @@ import {
     Sun,
     Moon,
     Target,
-    Package
+    Package,
+    FileText
 } from 'lucide-vue-next';
 
 const auth = useAuthStore();
@@ -90,6 +91,11 @@ const isSidebarOpen = ref(false);
                 :class="$route.path.includes('/recurring') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
                     <RefreshCw class="w-5 h-5" />
                     <span>Recorrência</span>
+                </router-link>
+                <router-link to="/planning/invoices" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                :class="$route.path.includes('/invoices') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
+                    <FileText class="w-5 h-5" />
+                    <span>Faturas</span>
                 </router-link>
                 <!-- Admin Link -->
                 <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"

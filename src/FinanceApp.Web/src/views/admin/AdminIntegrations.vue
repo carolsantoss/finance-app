@@ -7,7 +7,8 @@ const isLoading = ref(false);
 const token = ref('');
 const showToken = ref(false);
 const copied = ref(false);
-const apiEndpoint = ref(`${window.location.origin}/api/recurringtransactions/process`);
+const apiEndpointRecurring = ref(`${window.location.origin}/api/recurringtransactions/process`);
+const apiEndpointInvoices = ref(`${window.location.origin}/api/invoices/process`);
 const logs = ref<any[]>([]);
 
 const fetchLogs = async () => {
@@ -63,9 +64,11 @@ onMounted(() => {
     if (api.defaults.baseURL) {
         // If baseURL is absolute
         if (api.defaults.baseURL.startsWith('http')) {
-             apiEndpoint.value = `${api.defaults.baseURL}/recurringtransactions/process`;
+             apiEndpointRecurring.value = `${api.defaults.baseURL}/recurringtransactions/process`;
+             apiEndpointInvoices.value = `${api.defaults.baseURL}/invoices/process`;
         } else {
-             apiEndpoint.value = `${window.location.origin}${api.defaults.baseURL}/recurringtransactions/process`;
+             apiEndpointRecurring.value = `${window.location.origin}${api.defaults.baseURL}/recurringtransactions/process`;
+             apiEndpointInvoices.value = `${window.location.origin}${api.defaults.baseURL}/invoices/process`;
         }
     }
 });
@@ -91,10 +94,15 @@ onMounted(() => {
             </div>
 
             <div class="space-y-6">
-                 <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Endpoint de Processamento (POST)</label>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Endpoint 1: Transações Recorrentes (POST)</label>
+                    <div class="flex items-center gap-2 bg-[#121214] p-3 rounded-lg border border-[#323238] font-mono text-sm text-gray-300 break-all mb-4">
+                        {{ apiEndpointRecurring }}
+                    </div>
+
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Endpoint 2: Alerta de Faturas (POST)</label>
                     <div class="flex items-center gap-2 bg-[#121214] p-3 rounded-lg border border-[#323238] font-mono text-sm text-gray-300 break-all">
-                        {{ apiEndpoint }}
+                        {{ apiEndpointInvoices }}
                     </div>
                 </div>
 
@@ -120,12 +128,17 @@ onMounted(() => {
                 </div>
 
                 <div class="bg-[#121214] p-4 rounded-lg border border-[#323238]">
-                    <h4 class="font-bold text-sm text-gray-300 mb-3">Como configurar (Exemplo CURL)</h4>
+                    <h4 class="font-bold text-sm text-gray-300 mb-3">Como configurar (Exemplo CURL com ambos)</h4>
                     <code class="block font-mono text-xs text-blue-300 whitespace-pre-wrap">
-curl -X POST "{{ apiEndpoint }}" \
+# Processar Recorrências
+curl -X POST "{{ apiEndpointRecurring }}" \
+  -H "X-Scheduler-Secret: {{ token || 'SEU_TOKEN' }}"
+
+# Processar Faturas (Alertas de E-mail)
+curl -X POST "{{ apiEndpointInvoices }}" \
   -H "X-Scheduler-Secret: {{ token || 'SEU_TOKEN' }}"
                     </code>
-                    <p class="text-xs text-gray-500 mt-3">Recomendado: Configure este comando no CRON do seu servidor para rodar diariamente à meia-noite (00:01).</p>
+                    <p class="text-xs text-gray-500 mt-3">Recomendado: Configure estes comandos no CRON do seu servidor para rodar diariamente à meia-noite (00:01).</p>
                 </div>
             </div>
         </div>

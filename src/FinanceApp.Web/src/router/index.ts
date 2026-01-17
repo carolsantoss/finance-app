@@ -82,6 +82,11 @@ const router = createRouter({
                     component: () => import('../views/RecurringView.vue')
                 },
                 {
+                    path: '/planning/invoices',
+                    name: 'Invoices',
+                    component: () => import('../views/InvoicesView.vue')
+                },
+                {
                     path: '/admin/users',
                     name: 'AdminUsers',
                     component: () => import('../views/admin/AdminUsers.vue'),
