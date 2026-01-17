@@ -6,8 +6,8 @@ import {
     Trash2, 
     Edit, 
     Check, 
-    X,
-    Shield
+    X, 
+    Shield 
 } from 'lucide-vue-next';
 import api from '../../api/axios';
 
@@ -17,9 +17,17 @@ interface User {
     email: string;
     isAdmin: boolean;
     referrerName?: string;
+    planId?: number;
+    planName?: string;
+}
+
+interface Plan {
+    id: number;
+    name: string;
 }
 
 const users = ref<User[]>([]);
+const plans = ref<Plan[]>([]);
 const isLoading = ref(false);
 const isModalOpen = ref(false);
 const isEditing = ref(false);
@@ -31,8 +39,18 @@ const form = ref({
     nomeUsuario: '',
     email: '',
     senha: '',
-    isAdmin: false
+    isAdmin: false,
+    planId: null as number | null
 });
+
+const fetchPlans = async () => {
+    try {
+        const response = await api.get('/plans');
+        plans.value = response.data;
+    } catch (error) {
+        console.error('Failed to fetch plans', error);
+    }
+};
 
 const fetchUsers = async () => {
     isLoading.value = true;
@@ -48,7 +66,14 @@ const fetchUsers = async () => {
 
 const openCreateModal = () => {
     isEditing.value = false;
-    form.value = { id: 0, nomeUsuario: '', email: '', senha: '', isAdmin: false };
+    form.value = { 
+        id: 0, 
+        nomeUsuario: '', 
+        email: '', 
+        senha: '', 
+        isAdmin: false, 
+        planId: null 
+    };
     isModalOpen.value = true;
     errorMessage.value = '';
 };
@@ -60,7 +85,8 @@ const openEditModal = (user: User) => {
         nomeUsuario: user.nomeUsuario, 
         email: user.email, 
         senha: '', // Don't fill password
-        isAdmin: user.isAdmin 
+        isAdmin: user.isAdmin,
+        planId: user.planId || null
     };
     isModalOpen.value = true;
     errorMessage.value = '';
@@ -97,6 +123,7 @@ const deleteUser = async (id: number) => {
 
 onMounted(() => {
     fetchUsers();
+    fetchPlans();
 });
 </script>
 
@@ -131,6 +158,7 @@ onMounted(() => {
                             <th class="px-6 py-4">Nome</th>
                             <th class="px-6 py-4">Email</th>
                             <th class="px-6 py-4">Indicado Por</th>
+                            <th class="px-6 py-4">Plano</th>
                             <th class="px-6 py-4 text-center">Admin</th>
                             <th class="px-6 py-4 text-right">Ações</th>
                         </tr>
@@ -151,6 +179,12 @@ onMounted(() => {
                                     {{ user.referrerName }}
                                 </span>
                                 <span v-else>-</span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-300">
+                                <span v-if="user.planName" class="px-2 py-0.5 rounded border border-[#323238] bg-[#121214] text-xs">
+                                    {{ user.planName }}
+                                </span>
+                                <span v-else class="text-gray-600">-</span>
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <span v-if="user.isAdmin" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#00875F]/10 text-[#00B37E] border border-[#00875F]/20">
@@ -203,6 +237,16 @@ onMounted(() => {
                 <div class="space-y-1.5">
                     <label class="text-sm font-medium text-gray-200">Senha {{ isEditing ? '(deixe em branco para manter)' : '' }}</label>
                     <input v-model="form.senha" type="password" :required="!isEditing" class="w-full bg-[#121214] border border-[#323238] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#00875F] transition-colors" />
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-sm font-medium text-gray-200">Plano de Assinatura</label>
+                    <select v-model="form.planId" class="w-full bg-[#121214] border border-[#323238] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#00875F] transition-colors">
+                        <option :value="null">Selecione um plano</option>
+                        <option v-for="plan in plans" :key="plan.id" :value="plan.id">
+                            {{ plan.name }}
+                        </option>
+                    </select>
                 </div>
 
                  <div class="flex items-center space-x-3 pt-2">

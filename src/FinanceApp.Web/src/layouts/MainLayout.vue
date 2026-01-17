@@ -18,7 +18,8 @@ import {
     RefreshCw,
     Sun,
     Moon,
-    Target
+    Target,
+    Package
 } from 'lucide-vue-next';
 
 const auth = useAuthStore();
@@ -92,9 +93,14 @@ const isSidebarOpen = ref(false);
                 </router-link>
                 <!-- Admin Link -->
                 <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/admin') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
+                :class="$route.path.includes('/admin/users') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
                     <Shield class="w-5 h-5" />
-                    <span>Administração</span>
+                    <span>Usuários</span>
+                </router-link>
+                <router-link v-if="auth.user?.isAdmin" to="/admin/plans" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                :class="$route.path.includes('/admin/plans') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
+                    <Package class="w-5 h-5" />
+                    <span>Planos</span>
                 </router-link>
             </nav>
 
@@ -147,7 +153,7 @@ const isSidebarOpen = ref(false);
                     <div class="flex items-center gap-3 pl-4 border-l border-border">
                         <router-link to="/perfil" class="text-right hidden sm:block cursor-pointer hover:opacity-80 transition-opacity">
                             <p class="text-sm font-medium text-text-primary">{{ auth.user?.nomeUsuario }}</p>
-                            <p class="text-xs text-text-secondary">Premium</p>
+                            <p class="text-xs text-text-secondary text-[#00B37E] font-semibold">{{ (auth.user as any)?.planName || 'Gratuito' }}</p>
                         </router-link>
                         <router-link to="/perfil" class="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white font-bold border-2 border-app overflow-hidden">
                             {{ auth.user?.nomeUsuario?.charAt(0).toUpperCase() }}
@@ -191,7 +197,8 @@ const isSidebarOpen = ref(false);
                         <Sun v-else class="w-5 h-5" />
                     </button>
                 </div>
-                <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Administração</router-link>
+                <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Administração de Usuários</router-link>
+                <router-link v-if="auth.user?.isAdmin" to="/admin/plans" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Gerenciar Planos</router-link>
                 <button @click="auth.logout" class="block text-danger mt-8">Sair</button>
             </nav>
         </aside>

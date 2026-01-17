@@ -40,5 +40,10 @@ namespace FinanceApp.Shared.Models
         public virtual User? Referrer { get; set; }
         
         public int nr_indicacoes { get; set; } = 0; // Count of referrals
+
+        // Subscription System
+        public int? id_plan { get; set; }
+        [ForeignKey("id_plan")]
+        public virtual Plan? Plan { get; set; }
     }
 }

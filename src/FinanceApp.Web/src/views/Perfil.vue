@@ -275,7 +275,7 @@ const togglePreference = (key: 'darkMode' | 'notifications') => {
                         <h1 class="text-2xl font-bold text-text-primary">{{ auth.user?.nomeUsuario }}</h1>
                         <p class="text-text-secondary">{{ auth.user?.email }}</p>
                         <div class="flex items-center gap-2 mt-2">
-                            <span class="px-2 py-0.5 rounded-full bg-brand/10 text-brand text-xs font-bold border border-brand/20">PRO</span>
+                            <span class="px-2 py-0.5 rounded-full bg-brand/10 text-brand text-xs font-bold border border-brand/20 uppercase">{{ (auth.user as any)?.planName || 'Gratuito' }}</span>
                             <span v-if="isTwoFactorEnabled" class="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-xs font-bold border border-green-500/20">Seguro</span>
                         </div>
                     </div>

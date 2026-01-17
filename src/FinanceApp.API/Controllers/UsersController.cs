@@ -25,7 +25,11 @@ namespace FinanceApp.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDTO>>> GetUsers()
         {
-            var users = await _context.users.Include(u => u.Referrer).ToListAsync();
+            var users = await _context.users
+                .Include(u => u.Referrer)
+                .Include(u => u.Plan)
+                .ToListAsync();
+
             return Ok(users.Select(u => new UserDTO 
             {
                 Id = u.id_usuario,
@@ -38,7 +42,9 @@ namespace FinanceApp.API.Controllers
                 Bio = u.ds_sobre,
                 ReferralCode = u.cd_referralCode,
                 ReferralCount = u.nr_indicacoes,
-                ReferrerName = u.Referrer?.nm_nomeUsuario
+                ReferrerName = u.Referrer?.nm_nomeUsuario,
+                PlanId = u.id_plan,
+                PlanName = u.Plan?.nm_name
             }));
         }
 
@@ -50,7 +56,12 @@ namespace FinanceApp.API.Controllers
             if (User.Identity?.IsAuthenticated != true) return Unauthorized();
 
             var id = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-            var user = await _context.users.FindAsync(id);
+
+            var user = await _context.users
+                .Include(u => u.Plan)
+                .ThenInclude(p => p.PlanFeatures)
+                .ThenInclude(pf => pf.Feature)
+                .FirstOrDefaultAsync(u => u.id_usuario == id);
 
             if (user == null) return NotFound();
 
@@ -72,7 +83,10 @@ namespace FinanceApp.API.Controllers
                 Phone = user.nr_telefone,
                 Bio = user.ds_sobre,
                 ReferralCode = user.cd_referralCode,
-                ReferralCount = user.nr_indicacoes
+                ReferralCount = user.nr_indicacoes,
+                PlanId = user.id_plan,
+                PlanName = user.Plan?.nm_name,
+                Features = user.Plan?.PlanFeatures.Select(pf => pf.Feature.nm_key).ToList() ?? new List<string>()
             });
         }
 
@@ -113,8 +127,16 @@ namespace FinanceApp.API.Controllers
                 nm_nomeUsuario = request.NomeUsuario,
                 nm_email = request.Email,
                 hs_senha = PasswordHelper.Hash(request.Senha),
-                fl_admin = request.IsAdmin
+                fl_admin = request.IsAdmin,
+                // Assign Plan
+                id_plan = request.PlanId
             };
+            
+            if (user.id_plan == null || user.id_plan == 0)
+            {
+                 var defaultPlan = await _context.plans.FirstOrDefaultAsync(p => p.fl_isDefault);
+                 if (defaultPlan != null) user.id_plan = defaultPlan.id_plan;
+            }
 
             _context.users.Add(user);
             await _context.SaveChangesAsync();
@@ -128,7 +150,8 @@ namespace FinanceApp.API.Controllers
                 IsTwoFactorEnabled = user.fl_2faHabilitado,
                 JobTitle = user.nm_funcao,
                 Phone = user.nr_telefone,
-                Bio = user.ds_sobre
+                Bio = user.ds_sobre,
+                PlanId = user.id_plan
             });
         }
 
@@ -141,11 +164,16 @@ namespace FinanceApp.API.Controllers
 
             user.nm_nomeUsuario = request.NomeUsuario;
             user.nm_email = request.Email;
-            user.nm_email = request.Email;
             user.fl_admin = request.IsAdmin;
             user.nm_funcao = request.JobTitle;
             user.nr_telefone = request.Phone;
             user.ds_sobre = request.Bio;
+            
+            // Allow Admin to update Plan
+            if (request.PlanId.HasValue)
+            {
+                user.id_plan = request.PlanId.Value;
+            }
 
             if (!string.IsNullOrEmpty(request.Senha))
             {
@@ -207,6 +235,10 @@ namespace FinanceApp.API.Controllers
         public string? ReferralCode { get; set; }
         public int ReferralCount { get; set; }
         public string? ReferrerName { get; set; }
+        
+        public int? PlanId { get; set; }
+        public string? PlanName { get; set; }
+        public List<string> Features { get; set; } = new();
     }
 
     public class CreateUserDTO
@@ -215,6 +247,7 @@ namespace FinanceApp.API.Controllers
         public string Email { get; set; } = string.Empty;
         public string Senha { get; set; } = string.Empty;
         public bool IsAdmin { get; set; }
+        public int? PlanId { get; set; }
     }
 
     public class UpdateUserDTO
@@ -226,5 +259,6 @@ namespace FinanceApp.API.Controllers
         public string? JobTitle { get; set; }
         public string? Phone { get; set; }
         public string? Bio { get; set; }
+        public int? PlanId { get; set; }
     }
 }

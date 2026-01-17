@@ -104,6 +104,13 @@ namespace FinanceApp.API.Controllers
                 id_referrer = referrer?.id_usuario
             };
 
+            // Assign Default Plan
+            var defaultPlan = await _context.plans.FirstOrDefaultAsync(p => p.fl_isDefault);
+            if (defaultPlan != null)
+            {
+                user.id_plan = defaultPlan.id_plan;
+            }
+
             _context.users.Add(user);
             await _context.SaveChangesAsync();
 
