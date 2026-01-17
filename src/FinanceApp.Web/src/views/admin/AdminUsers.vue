@@ -16,6 +16,7 @@ interface User {
     nomeUsuario: string;
     email: string;
     isAdmin: boolean;
+    referrerName?: string;
 }
 
 const users = ref<User[]>([]);
@@ -129,6 +130,7 @@ onMounted(() => {
                             <th class="px-6 py-4">ID</th>
                             <th class="px-6 py-4">Nome</th>
                             <th class="px-6 py-4">Email</th>
+                            <th class="px-6 py-4">Indicado Por</th>
                             <th class="px-6 py-4 text-center">Admin</th>
                             <th class="px-6 py-4 text-right">Ações</th>
                         </tr>
@@ -144,6 +146,12 @@ onMounted(() => {
                             <td class="px-6 py-4 text-gray-500">#{{ user.id }}</td>
                             <td class="px-6 py-4 font-medium text-white">{{ user.nomeUsuario }}</td>
                             <td class="px-6 py-4">{{ user.email }}</td>
+                            <td class="px-6 py-4 text-gray-400">
+                                <span v-if="user.referrerName" class="text-[#00875F] flex items-center gap-1">
+                                    {{ user.referrerName }}
+                                </span>
+                                <span v-else>-</span>
+                            </td>
                             <td class="px-6 py-4 text-center">
                                 <span v-if="user.isAdmin" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#00875F]/10 text-[#00B37E] border border-[#00875F]/20">
                                     Sim

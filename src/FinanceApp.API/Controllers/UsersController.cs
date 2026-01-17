@@ -25,7 +25,7 @@ namespace FinanceApp.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDTO>>> GetUsers()
         {
-            var users = await _context.users.ToListAsync();
+            var users = await _context.users.Include(u => u.Referrer).ToListAsync();
             return Ok(users.Select(u => new UserDTO 
             {
                 Id = u.id_usuario,
@@ -35,7 +35,10 @@ namespace FinanceApp.API.Controllers
                 IsTwoFactorEnabled = u.fl_2faHabilitado,
                 JobTitle = u.nm_funcao,
                 Phone = u.nr_telefone,
-                Bio = u.ds_sobre
+                Bio = u.ds_sobre,
+                ReferralCode = u.cd_referralCode,
+                ReferralCount = u.nr_indicacoes,
+                ReferrerName = u.Referrer?.nm_nomeUsuario
             }));
         }
 
@@ -203,6 +206,7 @@ namespace FinanceApp.API.Controllers
 
         public string? ReferralCode { get; set; }
         public int ReferralCount { get; set; }
+        public string? ReferrerName { get; set; }
     }
 
     public class CreateUserDTO
