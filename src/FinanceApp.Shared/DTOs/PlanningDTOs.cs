@@ -42,6 +42,8 @@ namespace FinanceApp.Shared.DTOs
         public DateTime? DataFim { get; set; }
         public DateTime? UltimaProcessamento { get; set; }
         public bool Ativo { get; set; }
+        public int? RecurrenceDay { get; set; }
+        public int? DayOfWeek { get; set; }
     }
 
     public class CreateRecurringTransactionDTO
@@ -60,5 +62,7 @@ namespace FinanceApp.Shared.DTOs
         [Required]
         public DateTime DataInicio { get; set; }
         public DateTime? DataFim { get; set; }
+        public int? RecurrenceDay { get; set; }
+        public int? DayOfWeek { get; set; }
     }
 }

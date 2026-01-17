@@ -32,6 +32,10 @@ namespace FinanceApp.Shared.Models
         public DateTime? dt_fim { get; set; } // Null means indefinitely
 
         public DateTime? dt_ultimaProcessamento { get; set; }
+        
+        public int? nr_diaRecorrencia { get; set; } // For Monthly: Day 1-31
+        
+        public int? nr_diaSemana { get; set; } // For Weekly: 0 (Sunday) - 6 (Saturday)
 
         public bool fl_ativo { get; set; } = true;
     }

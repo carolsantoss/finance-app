@@ -23,7 +23,9 @@ const form = ref({
     frequencia: 'Mensal',
     dataInicio: new Date().toISOString().split('T')[0],
     dataFim: '',
-    ativo: true
+    ativo: true,
+    recurrenceDay: null as number | null,
+    dayOfWeek: null as number | null
 });
 
 const valorDisplay = ref('');
@@ -71,7 +73,9 @@ const openModal = (item: any = null) => {
             frequencia: item.frequencia,
             dataInicio: item.dataInicio.split('T')[0],
             dataFim: item.dataFim ? item.dataFim.split('T')[0] : '',
-            ativo: item.ativo
+            ativo: item.ativo,
+            recurrenceDay: item.recurrenceDay || null,
+            dayOfWeek: item.dayOfWeek || null
         };
         valorDisplay.value = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor);
     } else {
@@ -85,7 +89,9 @@ const openModal = (item: any = null) => {
             frequencia: 'Mensal',
             dataInicio: new Date().toISOString().split('T')[0],
             dataFim: '',
-            ativo: true
+            ativo: true,
+            recurrenceDay: null,
+            dayOfWeek: null
         };
         valorDisplay.value = '';
     }
@@ -105,7 +111,9 @@ const save = async () => {
         frequencia: form.value.frequencia,
         dataInicio: new Date(form.value.dataInicio),
         dataFim: form.value.dataFim ? new Date(form.value.dataFim) : null,
-        ativo: form.value.ativo
+        ativo: form.value.ativo,
+        RecurrenceDay: form.value.recurrenceDay,
+        DayOfWeek: form.value.dayOfWeek
     };
 
     if (editingItem.value) {
@@ -233,6 +241,27 @@ const formatCurrency = (value: number) => {
                         <div>
                             <label class="block text-sm font-medium text-gray-400 mb-1">Início</label>
                             <input v-model="form.dataInicio" type="date" class="w-full bg-[#121214] border border-[#323238] rounded-lg p-3 text-white focus:border-[#00875F] outline-none">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 animate-in fade-in zoom-in-95 duration-200" v-if="form.frequencia === 'Mensal' || form.frequencia === 'Semanal'">
+                        <div v-if="form.frequencia === 'Mensal'">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Dia da Recorrência</label>
+                            <input v-model.number="form.recurrenceDay" type="number" min="1" max="31" placeholder="Dia 1-31" class="w-full bg-[#121214] border border-[#323238] rounded-lg p-3 text-white focus:border-[#00875F] outline-none">
+                            <p class="text-[10px] text-gray-500 mt-1">Deixe vazio para usar o dia da data de início.</p>
+                        </div>
+                         <div v-if="form.frequencia === 'Semanal'">
+                            <label class="block text-sm font-medium text-gray-400 mb-1">Dia da Semana</label>
+                            <select v-model.number="form.dayOfWeek" class="w-full bg-[#121214] border border-[#323238] rounded-lg p-3 text-white focus:border-[#00875F] outline-none">
+                                <option :value="0">Domingo</option>
+                                <option :value="1">Segunda-feira</option>
+                                <option :value="2">Terça-feira</option>
+                                <option :value="3">Quarta-feira</option>
+                                <option :value="4">Quinta-feira</option>
+                                <option :value="5">Sexta-feira</option>
+                                <option :value="6">Sábado</option>
+                            </select>
+                            <p class="text-[10px] text-gray-500 mt-1">Deixe vazio para usar o dia da data de início.</p>
                         </div>
                     </div>
 

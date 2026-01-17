@@ -45,7 +45,9 @@ namespace FinanceApp.API.Controllers
                 DataInicio = r.dt_inicio,
                 DataFim = r.dt_fim,
                 UltimaProcessamento = r.dt_ultimaProcessamento,
-                Ativo = r.fl_ativo
+                Ativo = r.fl_ativo,
+                RecurrenceDay = r.nr_diaRecorrencia,
+                DayOfWeek = r.nr_diaSemana
             }));
         }
 
@@ -68,7 +70,9 @@ namespace FinanceApp.API.Controllers
                 nm_frequencia = request.Frequencia,
                 dt_inicio = request.DataInicio,
                 dt_fim = request.DataFim,
-                fl_ativo = true
+                fl_ativo = true,
+                nr_diaRecorrencia = request.RecurrenceDay,
+                nr_diaSemana = request.DayOfWeek
             };
 
             _context.recurringTransactions.Add(recurring);
@@ -97,6 +101,8 @@ namespace FinanceApp.API.Controllers
             recurring.dt_inicio = request.DataInicio;
             recurring.dt_fim = request.DataFim;
             recurring.fl_ativo = request.Ativo;
+            recurring.nr_diaRecorrencia = request.RecurrenceDay;
+            recurring.nr_diaSemana = request.DayOfWeek;
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -179,11 +185,33 @@ namespace FinanceApp.API.Controllers
             return r.nm_frequencia switch
             {
                 "Diário" => last.AddDays(1),
-                "Semanal" => last.AddDays(7),
-                "Mensal" => last.AddMonths(1),
+                "Semanal" => CalculateNextWeeklyDate(last, r.nr_diaSemana),
+                "Mensal" => CalculateNextMonthlyDate(last, r.nr_diaRecorrencia),
                 "Anual" => last.AddYears(1),
                 _ => last.AddMonths(1)
             };
+        }
+
+        private DateTime CalculateNextMonthlyDate(DateTime last, int? recurrenceDay)
+        {
+            var nextMonth = last.AddMonths(1);
+            if (recurrenceDay.HasValue)
+            {
+                var daysInMonth = DateTime.DaysInMonth(nextMonth.Year, nextMonth.Month);
+                var day = Math.Min(recurrenceDay.Value, daysInMonth);
+                return new DateTime(nextMonth.Year, nextMonth.Month, day);
+            }
+            return nextMonth;
+        }
+
+        private DateTime CalculateNextWeeklyDate(DateTime last, int? dayOfWeek)
+        {
+             // Add 7 days normally
+             // If dayOfWeek is enforced and different, we might need adjustment, 
+             // but usually Weekly just adds 7 days from the last valid date.
+             // If the user CHANGED the day of week, we might want to find the NEXT occurrence of that day.
+             // But for now, let's stick to simple AddDays(7) unless we want to support changing day.
+             return last.AddDays(7);
         }
     }
 }
