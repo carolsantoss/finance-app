@@ -78,8 +78,27 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // JWT Authentication
-// JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured");
+// Priority: Environment Variable > Configuration > Throw Exception
+var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? builder.Configuration["Jwt:Key"];
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? builder.Configuration["Jwt:Issuer"];
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? builder.Configuration["Jwt:Audience"];
+
+if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
+{
+    // Fail fast if critical secrets are missing
+    if (builder.Environment.IsProduction())
+    {
+        throw new InvalidOperationException("CRITICAL: JWT configuration (KEY, ISSUER, AUDIENCE) is missing in Environment Variables. Application cannot start.");
+    }
+    else
+    {
+        Console.WriteLine("[WARN] JWT Secrets missing. Using unsafe dev defaults ONLY for development.");
+        jwtKey ??= "Dev_Unsafe_Secret_Key_1234567890_!!!"; 
+        jwtIssuer ??= "FinanceApp.Dev";
+        jwtAudience ??= "FinanceApp.DevClient";
+    }
+}
+
 var key = Encoding.ASCII.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(x =>
@@ -97,8 +116,8 @@ builder.Services.AddAuthentication(x =>
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
         ValidateAudience = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"]
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience
     };
 });
 
@@ -136,6 +155,9 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Global Exception Handler
+app.UseMiddleware<FinanceApp.API.Middlewares.ExceptionMiddleware>();
 
 app.MapControllers();
 
