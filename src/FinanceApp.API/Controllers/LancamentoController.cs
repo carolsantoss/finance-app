@@ -331,6 +331,115 @@ namespace FinanceApp.API.Controllers
             return NoContent();
         }
 
+
+        [HttpPost("import")]
+        public async Task<IActionResult> ImportLancamentos([FromForm] IFormFile file, [FromForm] int walletId)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("Arquivo inválido");
+
+            var userId = GetUserId();
+            var importedCount = 0;
+            
+            // Find or Create Default Category "Importado"
+            var category = await _context.categories
+                .FirstOrDefaultAsync(c => c.id_usuario == userId && c.nm_nome == "Importado");
+                
+            if (category == null)
+            {
+                category = new Category
+                {
+                    id_usuario = userId,
+                    nm_nome = "Importado",
+                    nm_icone = "FileText",
+                    nm_cor = "#808080"
+                };
+                _context.categories.Add(category);
+                await _context.SaveChangesAsync();
+            }
+
+            using (var reader = new StreamReader(file.OpenReadStream()))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = await reader.ReadLineAsync();
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+
+                    var values = line.Split(';');
+                    if (values.Length < 6) continue;
+
+                    // Skip Header or footer lines that don't match date format
+                    if (!DateTime.TryParseExact(values[0], "dd/MM/yyyy", 
+                        new System.Globalization.CultureInfo("pt-BR"), 
+                        System.Globalization.DateTimeStyles.None, 
+                        out DateTime dataLancamento))
+                    {
+                        continue; 
+                    }
+
+                    var descricao = values[1].Trim();
+                    
+                    // Parse Values (Bradesco format: Credit at 3, Debit at 4)
+                    // Format: 1.500,00 (Pt-BR)
+                    var creditStr = values[3].Trim();
+                    var debitStr = values[4].Trim();
+                    
+                    decimal valor = 0;
+                    string tipo = "Saída";
+
+                    var culture = new System.Globalization.CultureInfo("pt-BR");
+
+                    if (!string.IsNullOrEmpty(creditStr) && 
+                        decimal.TryParse(creditStr, System.Globalization.NumberStyles.Number, culture, out decimal creditVal))
+                    {
+                        valor = creditVal;
+                        tipo = "Entrada";
+                    }
+                    else if (!string.IsNullOrEmpty(debitStr) && 
+                             decimal.TryParse(debitStr, System.Globalization.NumberStyles.Number, culture, out decimal debitVal))
+                    {
+                        valor = debitVal;
+                        tipo = "Saída";
+                    }
+
+                    if (valor == 0) continue; // Skip zero value rows
+
+                    // Check for duplicate (same date, desc, value, user) to avoid re-import spam
+                    var exists = await _context.lancamentos.AnyAsync(l => 
+                        l.id_usuario == userId && 
+                        l.dt_dataLancamento == dataLancamento &&
+                        l.nm_descricao == descricao &&
+                        l.nr_valor == valor &&
+                        l.nm_tipo == tipo);
+
+                    if (!exists)
+                    {
+                        var lancamento = new Lancamento
+                        {
+                            id_usuario = userId,
+                            nm_tipo = tipo,
+                            nm_descricao = descricao,
+                            nr_valor = valor,
+                            dt_dataLancamento = dataLancamento,
+                            nm_formaPagamento = "Débito", // Default for statement
+                            nr_parcelas = 1,
+                            nr_parcelasPagas = 1,
+                            nr_parcelaInicial = 1,
+                            id_categoria = category.id_categoria,
+                            id_wallet = walletId > 0 ? walletId : null
+                        };
+                        _context.lancamentos.Add(lancamento);
+                        importedCount++;
+                    }
+                }
+            }
+
+            if (importedCount > 0)
+                await _context.SaveChangesAsync();
+
+            return Ok(new { message = $"{importedCount} lançamentos importados com sucesso." });
+        }
+
         private bool LancamentoExists(int id)
         {
             return _context.lancamentos.Any(e => e.id_lancamento == id);

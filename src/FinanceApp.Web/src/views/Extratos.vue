@@ -5,7 +5,8 @@ import { useCategoryStore } from '../stores/category';
 import { useWalletStore } from '../stores/wallet';
 import { useFinanceStore } from '../stores/finance';
 import { usePrivacyStore } from '../stores/privacy';
-import { ArrowLeft, Trash2, Filter, Calendar, FileText, ArrowDownCircle, ArrowUpCircle, DollarSign, RefreshCw } from 'lucide-vue-next';
+import { ArrowLeft, Trash2, Filter, Calendar, FileText, ArrowDownCircle, ArrowUpCircle, DollarSign, RefreshCw, Upload } from 'lucide-vue-next';
+import ImportTransactionModal from '../components/ImportTransactionModal.vue';
 
 const router = useRouter();
 const finance = useFinanceStore();
@@ -25,6 +26,7 @@ const filters = ref({
 });
 
 const isProcessing = ref(false);
+const showImportModal = ref(false);
 
 onMounted(async () => {
     await Promise.all([
@@ -134,6 +136,11 @@ const handleDelete = async (id: number) => {
                 </select>
             </div>
 
+            <button @click="showImportModal = true" class="bg-brand hover:bg-brand-hover text-white font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 h-[42px]" title="Importar Extrato">
+                <Upload class="w-4 h-4" />
+                <span class="hidden md:inline">Importar</span>
+            </button>
+
             <button @click="finance.fetchTransactions()" class="bg-hover hover:bg-opacity-80 text-text-primary font-bold px-4 py-2 rounded transition-colors flex items-center gap-2 h-[42px]" title="Recarregar">
                 <RefreshCw class="w-4 h-4" />
             </button>
@@ -186,4 +193,10 @@ const handleDelete = async (id: number) => {
              </table>
         </div>
     </div>
+
+    <ImportTransactionModal 
+        :is-open="showImportModal" 
+        @close="showImportModal = false"
+        @success="finance.fetchTransactions()" 
+    />
 </template>

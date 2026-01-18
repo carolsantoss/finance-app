@@ -57,6 +57,19 @@ export const useFinanceStore = defineStore('finance', {
                 throw error;
             }
         },
+        async importTransactions(formData: FormData) {
+            try {
+                await api.post('/lancamentos/import', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                await this.fetchAll();
+            } catch (error) {
+                console.error('Failed to import transactions', error);
+                throw error;
+            }
+        },
         async fetchChartData() {
             try {
                 const response = await api.get('/lancamentos/chart');
