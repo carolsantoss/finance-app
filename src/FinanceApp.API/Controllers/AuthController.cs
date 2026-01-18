@@ -298,7 +298,14 @@ namespace FinanceApp.API.Controllers
         private string GenerateToken(User user, bool rememberMe = false)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured");
+            
+            // Priority: Environment Variable > Configuration > Throw Exception (matching Program.cs)
+            var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? _configuration["Jwt:Key"];
+            var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? _configuration["Jwt:Issuer"];
+            var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? _configuration["Jwt:Audience"];
+
+            if (string.IsNullOrEmpty(jwtKey)) throw new InvalidOperationException("Jwt:Key is not configured");
+
             var key = Encoding.ASCII.GetBytes(jwtKey);
             
             var claims = new List<Claim>
@@ -319,8 +326,8 @@ namespace FinanceApp.API.Controllers
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddDays(rememberMe ? 30 : 7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-                Issuer = _configuration["Jwt:Issuer"],
-                Audience = _configuration["Jwt:Audience"]
+                Issuer = jwtIssuer,
+                Audience = jwtAudience
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
