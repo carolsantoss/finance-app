@@ -2,7 +2,9 @@
 import { ref, onMounted, computed } from 'vue';
 import api from '../api/axios';
 import { useToastStore } from '../stores/toast';
-import { Plus, Target, Calendar, DollarSign, Trash2, Edit2, TrendingUp } from 'lucide-vue-next';
+import { useAuthStore } from '../stores/auth';
+import { Plus, Target, Calendar, DollarSign, Trash2, Edit2, TrendingUp, Users } from 'lucide-vue-next';
+import GoalShareModal from '../components/GoalShareModal.vue';
 
 interface Goal {
     id_goal: number;
@@ -10,12 +12,16 @@ interface Goal {
     nr_valorObjetivo: number;
     nr_valorAtual: number;
     dt_prazo: string | null;
+    id_usuario: number;
 }
 
+const auth = useAuthStore();
 const goals = ref<Goal[]>([]);
 const isLoading = ref(true);
 const toast = useToastStore();
 const showModal = ref(false);
+const showShareModal = ref(false);
+const selectedShareGoalId = ref(0);
 const isSaving = ref(false);
 const isEditing = ref(false);
 
@@ -43,6 +49,11 @@ const openNewGoalModal = () => {
     isEditing.value = false;
     form.value = { id_goal: 0, nm_titulo: '', nr_valorObjetivo: 0, nr_valorAtual: 0, dt_prazo: '' };
     showModal.value = true;
+};
+
+const openShareModal = (goal: Goal) => {
+    selectedShareGoalId.value = goal.id_goal;
+    showShareModal.value = true;
 };
 
 const openEditModal = (goal: Goal) => {
@@ -140,7 +151,13 @@ onMounted(fetchGoals);
                     <div class="p-3 bg-brand/10 rounded-lg text-brand">
                         <Target class="w-6 h-6" />
                     </div>
+                     <div v-if="goal.id_usuario !== auth.user?.id" class="absolute top-6 right-16 px-2 py-0.5 bg-brand text-white text-[10px] font-bold rounded uppercase">
+                        Compartilhado
+                    </div>
                     <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button @click="openShareModal(goal)" class="p-2 hover:bg-hover rounded-md text-text-secondary hover:text-brand transition-colors" title="Compartilhar">
+                            <Users class="w-4 h-4" />
+                        </button>
                         <button @click="openEditModal(goal)" class="p-2 hover:bg-hover rounded-md text-text-secondary hover:text-brand transition-colors">
                             <Edit2 class="w-4 h-4" />
                         </button>
@@ -219,6 +236,14 @@ onMounted(fetchGoals);
                 </div>
             </div>
         </div>
+
+
+
+        <GoalShareModal 
+            v-if="showShareModal" 
+            :goalId="selectedShareGoalId" 
+            @close="showShareModal = false" 
+        />
 
     </div>
 </template>
