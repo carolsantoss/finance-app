@@ -24,12 +24,8 @@ api.interceptors.request.use(config => {
     ui.startLoading();
 
     const token = localStorage.getItem('token');
-    console.log('[Axios] Interceptor running. Token found in localStorage:', !!token);
     if (token) {
-        console.log('[Axios] Attaching token:', token.substring(0, 10) + '...');
         config.headers.Authorization = `Bearer ${token}`;
-    } else {
-        console.warn('[Axios] No token found in localStorage');
     }
     return config;
 }, error => {
