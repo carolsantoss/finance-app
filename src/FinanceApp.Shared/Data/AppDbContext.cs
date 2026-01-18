@@ -24,6 +24,7 @@ namespace FinanceApp.Shared.Data
         public DbSet<SystemSetting> systemSettings { get; set; }
         public DbSet<IntegrationLog> integrationLogs { get; set; }
         public DbSet<Invoice> invoices { get; set; }
+        public DbSet<Notification> notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

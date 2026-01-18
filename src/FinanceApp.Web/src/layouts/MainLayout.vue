@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useThemeStore } from '../stores/theme';
+import { useNotificationStore } from '../stores/notification';
+import NotificationDetailsModal from '../components/NotificationDetailsModal.vue';
 import {
     LayoutDashboard, 
     Wallet, 
@@ -93,6 +95,46 @@ const toggleSection = (title: string | undefined) => {
     collapsedSections.value[title] = !collapsedSections.value[title];
 };
 
+// Notification Logic
+const notificationStore = useNotificationStore();
+const showNotifications = ref(false);
+const selectedNotification = ref<any>(null);
+const isModalOpen = ref(false);
+
+onMounted(() => {
+    if (auth.isAuthenticated) {
+        notificationStore.fetchUnreadCount();
+        notificationStore.fetchNotifications();
+    }
+});
+
+const toggleNotifications = () => {
+    showNotifications.value = !showNotifications.value;
+    if (showNotifications.value) {
+        notificationStore.fetchNotifications();
+    }
+};
+
+const handleNotificationClick = async (notification: any) => {
+    selectedNotification.value = notification;
+    isModalOpen.value = true;
+    showNotifications.value = false; // Close dropdown
+
+    if (!notification.fl_lida) {
+        await notificationStore.markAsRead(notification.id_notificacao);
+    }
+};
+
+const handleMarkAllRead = async () => {
+    await notificationStore.markAllAsRead();
+};
+
+const stripHtml = (html: string) => {
+    if (!html) return '';
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+};
 </script>
 
 <template>
@@ -194,10 +236,68 @@ const toggleSection = (title: string | undefined) => {
                         <Sun v-else class="w-5 h-5" />
                     </button>
 
-                    <button class="relative text-text-secondary hover:text-text-primary transition-colors">
-                        <Bell class="w-5 h-5" />
-                        <span class="absolute top-0 right-0 w-2 h-2 bg-danger rounded-full"></span>
-                    </button>
+                    <!-- Notifications Dropdown -->
+                    <div class="relative">
+                        <button 
+                            @click="toggleNotifications"
+                            class="relative p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-hover transition-colors outline-none"
+                        >
+                            <Bell class="w-5 h-5" />
+                            <span v-if="notificationStore.unreadCount > 0" class="absolute top-1 right-1 w-2.5 h-2.5 bg-danger rounded-full border-2 border-card"></span>
+                        </button>
+
+                        <!-- Dropdown Panel -->
+                        <div v-if="showNotifications" 
+                             class="absolute right-0 mt-2 w-80 sm:w-96 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2"
+                        >
+                            <div class="p-4 border-b border-border flex justify-between items-center">
+                                <h3 class="font-bold text-text-primary">Notificações</h3>
+                                <button 
+                                    v-if="notificationStore.unreadCount > 0"
+                                    @click="handleMarkAllRead"
+                                    class="text-xs text-brand hover:text-brand-hover font-medium"
+                                >
+                                    Marcar todas como lidas
+                                </button>
+                            </div>
+
+                            <div class="max-h-[70vh] overflow-y-auto">
+                                <div v-if="notificationStore.isLoading" class="p-8 text-center text-text-tertiary">
+                                    <RefreshCw class="w-6 h-6 animate-spin mx-auto mb-2" />
+                                    <p class="text-xs">Carregando...</p>
+                                </div>
+
+                                <div v-else-if="notificationStore.notifications.length === 0" class="p-8 text-center text-text-tertiary">
+                                    <Bell class="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                    <p class="text-sm">Nenhuma notificação nova</p>
+                                </div>
+
+                                <div v-else class="divide-y divide-border/50">
+                                    <div 
+                                        v-for="notification in notificationStore.notifications" 
+                                        :key="notification.id_notificacao"
+                                        class="p-4 hover:bg-hover transition-colors cursor-pointer flex gap-3 items-start"
+                                        :class="{ 'bg-brand/5': !notification.fl_lida }"
+                                        @click="handleNotificationClick(notification)"
+                                    >
+                                        <div class="mt-1">
+                                            <div class="w-2 h-2 rounded-full" :class="notification.fl_lida ? 'bg-transparent' : 'bg-brand'"></div>
+                                        </div>
+                                        <div class="flex-1 space-y-1">
+                                            <p class="text-sm font-medium text-text-primary leading-none">{{ notification.nm_titulo }}</p>
+                                            <p class="text-xs text-text-secondary line-clamp-2">{{ stripHtml(notification.ds_mensagem) }}</p>
+                                            <p class="text-[10px] text-text-tertiary uppercase font-bold tracking-wider">
+                                                {{ new Date(notification.dt_criacao).toLocaleDateString() }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Backdrop for clicking outside -->
+                        <div v-if="showNotifications" class="fixed inset-0 z-40" @click="showNotifications = false"></div>
+                    </div>
                     <div class="flex items-center gap-3 pl-4 border-l border-border">
                         <router-link to="/perfil" class="text-right hidden sm:block cursor-pointer hover:opacity-80 transition-opacity">
                             <p class="text-sm font-medium text-text-primary">{{ auth.user?.nomeUsuario }}</p>
@@ -214,6 +314,12 @@ const toggleSection = (title: string | undefined) => {
             <div class="flex-1 overflow-hidden relative bg-app">
                  <router-view />
             </div>
+
+            <NotificationDetailsModal 
+                :is-open="isModalOpen" 
+                :notification="selectedNotification"
+                @close="isModalOpen = false"
+            />
 
             <!-- Mobile Quick Action (FAB) - Visible only on Dashboard usually, or globally? 
                  Let's keep it global for consistency or maybe just on Dashboard via the page itself?
