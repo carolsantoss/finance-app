@@ -34,6 +34,8 @@ api.interceptors.request.use(config => {
     return Promise.reject(error);
 });
 
+import router from '../router';
+
 api.interceptors.response.use(response => {
     const ui = useUIStore();
     ui.stopLoading();
@@ -41,6 +43,13 @@ api.interceptors.response.use(response => {
 }, error => {
     const ui = useUIStore();
     ui.stopLoading();
+
+    if (error.response && error.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.push('/login');
+    }
+
     return Promise.reject(error);
 });
 
