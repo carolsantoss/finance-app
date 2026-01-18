@@ -33,6 +33,7 @@ export const useAuthStore = defineStore('auth', {
                 }
 
                 this.token = response.data.token;
+                console.log('[AuthStore] Login successful. Token received:', this.token ? (this.token.substring(0, 10) + '...') : 'null');
                 this.user = {
                     id: response.data.id,
                     nomeUsuario: response.data.nomeUsuario,
