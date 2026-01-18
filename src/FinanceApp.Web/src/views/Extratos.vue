@@ -4,12 +4,14 @@ import { useRouter } from 'vue-router';
 import { useCategoryStore } from '../stores/category';
 import { useWalletStore } from '../stores/wallet';
 import { useFinanceStore } from '../stores/finance';
+import { usePrivacyStore } from '../stores/privacy';
 import { ArrowLeft, Trash2, Filter, Calendar, FileText, ArrowDownCircle, ArrowUpCircle, DollarSign, RefreshCw } from 'lucide-vue-next';
 
 const router = useRouter();
 const finance = useFinanceStore();
 const categoryStore = useCategoryStore();
 const walletStore = useWalletStore();
+const privacyStore = usePrivacyStore();
 
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
@@ -75,21 +77,21 @@ const handleDelete = async (id: number) => {
                     <ArrowDownCircle class="w-4 h-4" />
                     <span class="text-xs uppercase font-bold">Entradas do Mês</span>
                 </div>
-                <p class="text-2xl font-bold text-[#00B37E]">{{ formatCurrency(totalEntradas) }}</p>
+                <p class="text-2xl font-bold text-[#00B37E]" :class="{ 'blur-md': privacyStore.isHidden }">{{ formatCurrency(totalEntradas) }}</p>
             </div>
             <div class="bg-card p-6 rounded-md border border-border flex flex-col justify-between">
                  <div class="flex items-center gap-2 text-text-secondary mb-2">
                     <ArrowUpCircle class="w-4 h-4" />
                     <span class="text-xs uppercase font-bold">Saídas do Mês</span>
                 </div>
-                <p class="text-2xl font-bold text-[#F75A68]">{{ formatCurrency(totalSaidas) }}</p>
+                <p class="text-2xl font-bold text-[#F75A68]" :class="{ 'blur-md': privacyStore.isHidden }">{{ formatCurrency(totalSaidas) }}</p>
             </div>
              <div class="bg-card p-6 rounded-md border border-border flex flex-col justify-between">
                  <div class="flex items-center gap-2 text-text-secondary mb-2">
                     <DollarSign class="w-4 h-4" />
                     <span class="text-xs uppercase font-bold">Saldo do Mês</span>
                 </div>
-                <p class="text-2xl font-bold" :class="saldo >= 0 ? 'text-[#00B37E]' : 'text-[#F75A68]'">
+                <p class="text-2xl font-bold" :class="[saldo >= 0 ? 'text-[#00B37E]' : 'text-[#F75A68]', { 'blur-md': privacyStore.isHidden }]">
                     {{ formatCurrency(saldo) }}
                 </p>
             </div>
@@ -165,7 +167,7 @@ const handleDelete = async (id: number) => {
                             </span>
                         </td>
                          <td class="px-6 py-4 text-text-secondary">{{ item.formaPagamento }}</td>
-                        <td class="px-6 py-4 font-bold" :class="item.tipo === 'Entrada' ? 'text-[#00B37E]' : 'text-[#F75A68]'">
+                        <td class="px-6 py-4 font-bold" :class="[item.tipo === 'Entrada' ? 'text-[#00B37E]' : 'text-[#F75A68]', { 'blur-sm select-none': privacyStore.isHidden }]">
                             {{ formatCurrency(item.valor) }}
                         </td>
                          <td class="px-6 py-4 text-center text-text-tertiary">

@@ -2,8 +2,9 @@
 import { onMounted, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useFinanceStore } from '../stores/finance';
+import { usePrivacyStore } from '../stores/privacy';
 import { 
-    TrendingUp, 
+    TrendingUp,  
     Plus
 } from 'lucide-vue-next';
 import FinanceChart from '../components/FinanceChart.vue';
@@ -13,6 +14,7 @@ import { useTour } from '../composables/useTour';
 
 const auth = useAuthStore();
 const finance = useFinanceStore();
+const privacyStore = usePrivacyStore();
 const { checkAndStartTour } = useTour();
 
 const isTransactionModalOpen = ref(false);
@@ -97,7 +99,7 @@ const formatCurrency = (value: number) => {
                         <div class="absolute right-[-20px] top-[-20px] w-24 h-24 bg-[#00875F]/10 rounded-full blur-2xl group-hover:bg-[#00875F]/20 transition-all"></div>
                         <div class="relative z-10">
                             <p class="text-text-secondary font-medium mb-1">Saldo Total</p>
-                            <h3 class="text-3xl font-bold text-text-primary">{{ formatCurrency(finance.summary.saldo) }}</h3>
+                            <h3 class="text-3xl font-bold text-text-primary" :class="{ 'blur-md': privacyStore.isHidden }">{{ formatCurrency(finance.summary.saldo) }}</h3>
                             <div class="mt-4 flex items-center text-sm" :class="finance.summary.percentageChange >= 0 ? 'text-[#00B37E]' : 'text-[#F75A68]'">
                                 <TrendingUp class="w-4 h-4 mr-1" :class="finance.summary.percentageChange < 0 ? 'rotate-180' : ''" />
                                 <span>{{ finance.summary.percentageChange >= 0 ? '+' : '' }}{{ finance.summary.percentageChange.toFixed(1) }}% vs mês anterior</span>
@@ -109,7 +111,7 @@ const formatCurrency = (value: number) => {
                         <div class="absolute right-[-20px] top-[-20px] w-24 h-24 bg-[#00875F]/10 rounded-full blur-2xl group-hover:bg-[#00875F]/20 transition-all"></div>
                         <div class="relative z-10">
                             <p class="text-text-secondary font-medium mb-1">Entradas</p>
-                            <h3 class="text-3xl font-bold text-text-primary">{{ formatCurrency(finance.summary.entradas) }}</h3>
+                            <h3 class="text-3xl font-bold text-text-primary" :class="{ 'blur-md': privacyStore.isHidden }">{{ formatCurrency(finance.summary.entradas) }}</h3>
                             <div class="mt-4 flex items-center text-sm text-text-secondary">
                                 <span>Total recebido</span>
                             </div>
@@ -120,7 +122,7 @@ const formatCurrency = (value: number) => {
                         <div class="absolute right-[-20px] top-[-20px] w-24 h-24 bg-[#F75A68]/10 rounded-full blur-2xl group-hover:bg-[#F75A68]/20 transition-all"></div>
                         <div class="relative z-10">
                             <p class="text-text-secondary font-medium mb-1">Saídas</p>
-                            <h3 class="text-3xl font-bold text-text-primary">{{ formatCurrency(finance.summary.saidas) }}</h3>
+                            <h3 class="text-3xl font-bold text-text-primary" :class="{ 'blur-md': privacyStore.isHidden }">{{ formatCurrency(finance.summary.saidas) }}</h3>
                                 <div class="mt-4 flex items-center text-sm text-text-secondary">
                                 <span>Total gasto</span>
                             </div>
@@ -169,7 +171,7 @@ const formatCurrency = (value: number) => {
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-right font-bold"
-                                        :class="item.tipo === 'Entrada' ? 'text-[#00B37E]' : 'text-[#F75A68]'">
+                                        :class="[item.tipo === 'Entrada' ? 'text-[#00B37E]' : 'text-[#F75A68]', { 'blur-sm select-none': privacyStore.isHidden }]">
                                         {{ item.tipo === 'Saída' ? '-' : '+' }} {{ formatCurrency(item.valor) }}
                                     </td>
                                 </tr>

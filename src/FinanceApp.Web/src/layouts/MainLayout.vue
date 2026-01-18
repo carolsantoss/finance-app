@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useThemeStore } from '../stores/theme';
 import { useNotificationStore } from '../stores/notification';
+import { usePrivacyStore } from '../stores/privacy';
 import NotificationDetailsModal from '../components/NotificationDetailsModal.vue';
 import {
     LayoutDashboard, 
@@ -27,7 +28,9 @@ import {
     Users,
     Link,
     PieChart,
-    BarChart3
+    BarChart3,
+    Eye,
+    EyeOff
 } from 'lucide-vue-next';
 
 interface MenuItem {
@@ -97,6 +100,7 @@ const toggleSection = (title: string | undefined) => {
 
 // Notification Logic
 const notificationStore = useNotificationStore();
+const privacyStore = usePrivacyStore();
 const showNotifications = ref(false);
 const selectedNotification = ref<any>(null);
 const isModalOpen = ref(false);
@@ -236,6 +240,12 @@ const stripHtml = (html: string) => {
                         <Sun v-else class="w-5 h-5" />
                     </button>
 
+                    <!-- Privacy Toggle -->
+                    <button @click="privacyStore.toggle()" class="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-hover transition-colors" title="Modo Privacidade">
+                        <EyeOff v-if="privacyStore.isHidden" class="w-5 h-5" />
+                        <Eye v-else class="w-5 h-5" />
+                    </button>
+
                     <!-- Notifications Dropdown -->
                     <div class="relative">
                         <button 
@@ -362,11 +372,17 @@ const stripHtml = (html: string) => {
                 
                 <div class="border-t border-border pt-4 mt-4 space-y-4">
                     <div class="flex justify-between items-center text-text-secondary">
-                        <span>Tema</span>
-                        <button @click="theme.toggleTheme()" class="p-2">
-                            <Moon v-if="theme.isDark" class="w-5 h-5" />
-                            <Sun v-else class="w-5 h-5" />
-                        </button>
+                        <span>Tema / Privacidade</span>
+                        <div class="flex gap-2">
+                             <button @click="privacyStore.toggle()" class="p-2">
+                                <EyeOff v-if="privacyStore.isHidden" class="w-5 h-5" />
+                                <Eye v-else class="w-5 h-5" />
+                            </button>
+                            <button @click="theme.toggleTheme()" class="p-2">
+                                <Moon v-if="theme.isDark" class="w-5 h-5" />
+                                <Sun v-else class="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
                     <button @click="auth.logout" class="block text-danger w-full text-left">Sair</button>
                 </div>
