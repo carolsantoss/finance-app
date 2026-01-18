@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useThemeStore } from '../stores/theme';
-import { 
+import {
     LayoutDashboard, 
     Wallet, 
     TrendingUp, 
@@ -20,12 +20,78 @@ import {
     Moon,
     Target,
     Package,
-    FileText
+    FileText,
+    ChevronDown,
+    Users,
+    Link,
+    PieChart,
+    BarChart3
 } from 'lucide-vue-next';
+
+interface MenuItem {
+    label: string;
+    route: string;
+    icon: any;
+}
+
+interface MenuGroup {
+    title?: string;
+    isAdmin?: boolean;
+    items: MenuItem[];
+}
 
 const auth = useAuthStore();
 const theme = useThemeStore();
 const isSidebarOpen = ref(false);
+
+const menuGroups = [
+    {
+        title: 'Geral', // Optional title for first section
+        items: [
+            { label: 'Dashboard', route: '/', icon: LayoutDashboard },
+            { label: 'Movimentações', route: '/extratos', icon: TrendingUp },
+            { label: 'Relatórios', route: '/reports', icon: BarChart3 },
+        ]
+    },
+    {
+        title: 'Planejamento',
+        items: [
+            { label: 'Metas', route: '/goals', icon: Target },
+            { label: 'Orçamentos', route: '/planning/budgets', icon: PieChart },
+            { label: 'Recorrência', route: '/planning/recurring', icon: RefreshCw },
+            { label: 'Faturas', route: '/planning/invoices', icon: FileText }
+        ]
+    },
+    {
+        title: 'Configurações',
+        items: [
+            { label: 'Categorias', route: '/settings/categories', icon: Tag },
+            { label: 'Carteiras e Cartões', route: '/settings/wallets', icon: Wallet },
+            { label: 'Perfil', route: '/perfil', icon: Settings },
+        ]
+    },
+    {
+        title: 'Administração',
+        isAdmin: true,
+        items: [
+            { label: 'Usuários', route: '/admin/users', icon: Users },
+            { label: 'Planos', route: '/admin/plans', icon: Package },
+            { label: 'Integrações', route: '/admin/integrations', icon: Link },
+        ]
+    }
+];
+
+const collapsedSections = ref<Record<string, boolean>>({
+    'Geral': false,
+    'Planejamento': false,
+    'Configurações': false,
+    'Administração': false
+});
+
+const toggleSection = (title: string | undefined) => {
+    if (!title) return;
+    collapsedSections.value[title] = !collapsedSections.value[title];
+};
 
 </script>
 
@@ -41,78 +107,49 @@ const isSidebarOpen = ref(false);
                 <h1 class="text-2xl font-bold tracking-tight text-text-primary">Finance</h1>
             </div>
 
-            <nav id="sidebar-nav" class="flex-1 px-4 py-4 space-y-2">
-                <router-link to="/" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path === '/' ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <LayoutDashboard class="w-5 h-5" />
-                    <span class="font-medium">Dashboard</span>
-                </router-link>
-                <router-link to="/extratos" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/extratos') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <TrendingUp class="w-5 h-5" />
-                    <span>Extratos</span>
-                </router-link>
-                <router-link to="/reports" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/reports') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <TrendingUp class="w-5 h-5 rotate-180" />
-                    <span>Relatórios</span>
-                </router-link>
-                <router-link to="/perfil" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/perfil') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <Settings class="w-5 h-5" />
-                    <span>Perfil</span>
-                </router-link>
-                <router-link to="/settings/categories" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/categories') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <Tag class="w-5 h-5" />
-                    <span>Categorias</span>
-                </router-link>
-                <router-link to="/settings/wallets" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/wallets') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <Wallet class="w-5 h-5" />
-                    <span>Carteiras e Cartões</span>
-                </router-link>
+            <nav id="sidebar-nav" class="flex-1 px-4 py-4 space-y-6 overflow-y-auto">
+                <div v-for="(group, index) in menuGroups" :key="index">
+                    <!-- Section Header -->
+                    <div v-if="group.title" 
+                         @click="toggleSection(group.title)"
+                         class="flex items-center justify-between px-2 mb-2 cursor-pointer group select-none">
+                        <p class="text-xs font-bold text-text-tertiary uppercase tracking-wider group-hover:text-text-primary transition-colors">
+                            {{ group.title }}
+                        </p>
+                         <ChevronDown 
+                            class="w-4 h-4 text-text-tertiary transition-transform duration-200"
+                            :class="{ '-rotate-90': collapsedSections[group.title] }"
+                         />
+                    </div>
 
-                <div class="px-4 pt-4 pb-2">
-                    <p class="text-xs font-bold text-text-tertiary uppercase tracking-wider">Planejamento</p>
+                    <!-- Items -->
+                    <div v-show="!auth.user?.isAdmin && group.isAdmin ? false : true" class="space-y-1">
+                        <transition-group
+                            enter-active-class="transition duration-200 ease-out"
+                            enter-from-class="transform -translate-y-2 opacity-0"
+                            enter-to-class="transform translate-y-0 opacity-100"
+                            leave-active-class="transition duration-200 ease-in"
+                            leave-from-class="transform translate-y-0 opacity-100"
+                            leave-to-class="transform -translate-y-2 opacity-0"
+                        >
+                            <div v-if="!collapsedSections[group.title || '']" class="space-y-1">
+                                <template v-for="item in group.items" :key="item.route">
+                                     <router-link 
+                                        v-if="!group.isAdmin || (group.isAdmin && auth.user?.isAdmin)"
+                                        :to="item.route" 
+                                        class="flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm"
+                                        :class="$route.path === item.route || (item.route !== '/' && $route.path.startsWith(item.route)) 
+                                            ? 'bg-brand/10 text-brand border border-brand/20 shadow-sm' 
+                                            : 'text-text-secondary hover:text-text-primary hover:bg-hover hover:pl-5'"
+                                    >
+                                        <component :is="item.icon" class="w-4 h-4" />
+                                        <span class="font-medium">{{ item.label }}</span>
+                                    </router-link>
+                                </template>
+                            </div>
+                        </transition-group>
+                    </div>
                 </div>
-
-                <router-link to="/goals" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/goals') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <Target class="w-5 h-5" />
-                    <span>Metas</span>
-                </router-link>
-                <router-link to="/planning/budgets" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/budgets') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <TrendingUp class="w-5 h-5" />
-                    <span>Orçamentos</span>
-                </router-link>
-                <router-link to="/planning/recurring" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/recurring') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <RefreshCw class="w-5 h-5" />
-                    <span>Recorrência</span>
-                </router-link>
-                <router-link to="/planning/invoices" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/invoices') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <FileText class="w-5 h-5" />
-                    <span>Faturas</span>
-                </router-link>
-                <!-- Admin Link -->
-                <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/admin/users') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <Shield class="w-5 h-5" />
-                    <span>Usuários</span>
-                </router-link>
-                <router-link v-if="auth.user?.isAdmin" to="/admin/plans" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/admin/plans') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <Package class="w-5 h-5" />
-                    <span>Planos</span>
-                </router-link>
-                <router-link v-if="auth.user?.isAdmin" to="/admin/integrations" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
-                :class="$route.path.includes('/admin/integrations') ? 'bg-brand/10 text-brand border border-brand/20' : 'text-text-secondary hover:text-text-primary hover:bg-hover'">
-                    <RefreshCw class="w-5 h-5" />
-                    <span>Integrações</span>
-                </router-link>
             </nav>
 
             <div class="p-4 border-t border-border">
@@ -193,24 +230,40 @@ const isSidebarOpen = ref(false);
                  <h2 class="text-xl font-bold text-text-primary">Menu</h2>
                  <button @click="isSidebarOpen = false" class="text-text-secondary"><X class="w-6 h-6" /></button>
              </div>
-              <nav class="space-y-4">
-                <router-link to="/" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Dashboard</router-link>
-                <router-link to="/extratos" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Extratos</router-link>
-                <router-link to="/goals" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Metas</router-link>
-                <router-link to="/reports" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Relatórios</router-link>
-                <router-link to="/perfil" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Perfil</router-link>
-                <router-link to="/settings/categories" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Categorias</router-link>
-                <router-link to="/settings/wallets" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Carteiras</router-link>
-                <div class="flex justify-between items-center text-text-secondary">
-                    <span>Tema</span>
-                    <button @click="theme.toggleTheme()" class="p-2">
-                        <Moon v-if="theme.isDark" class="w-5 h-5" />
-                        <Sun v-else class="w-5 h-5" />
-                    </button>
+              <nav class="space-y-4 overflow-y-auto flex-1 h-full pb-20">
+                <div v-for="(group, index) in menuGroups" :key="index">
+                     <div v-if="group.title" 
+                          @click="toggleSection(group.title)" 
+                          class="flex justify-between items-center text-text-secondary font-bold mb-2 cursor-pointer select-none">
+                         <span>{{ group.title }}</span>
+                         <ChevronDown class="w-4 h-4 transition-transform" :class="{ '-rotate-90': collapsedSections[group.title] }" />
+                     </div>
+                     
+                     <div v-show="!collapsedSections[group.title || '']" class="space-y-2 pl-2 border-l border-border/50 ml-1">
+                         <template v-for="item in group.items" :key="item.route">
+                             <router-link 
+                                v-if="!group.isAdmin || (group.isAdmin && auth.user?.isAdmin)"
+                                :to="item.route" 
+                                class="block text-text-secondary hover:text-brand py-2" 
+                                :class="$route.path === item.route ? 'text-brand font-medium' : ''"
+                                @click="isSidebarOpen = false"
+                             >
+                                {{ item.label }}
+                             </router-link>
+                         </template>
+                     </div>
                 </div>
-                <router-link v-if="auth.user?.isAdmin" to="/admin/users" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Administração de Usuários</router-link>
-                <router-link v-if="auth.user?.isAdmin" to="/admin/plans" class="block text-text-secondary hover:text-brand" @click="isSidebarOpen = false">Gerenciar Planos</router-link>
-                <button @click="auth.logout" class="block text-danger mt-8">Sair</button>
+                
+                <div class="border-t border-border pt-4 mt-4 space-y-4">
+                    <div class="flex justify-between items-center text-text-secondary">
+                        <span>Tema</span>
+                        <button @click="theme.toggleTheme()" class="p-2">
+                            <Moon v-if="theme.isDark" class="w-5 h-5" />
+                            <Sun v-else class="w-5 h-5" />
+                        </button>
+                    </div>
+                    <button @click="auth.logout" class="block text-danger w-full text-left">Sair</button>
+                </div>
             </nav>
         </aside>
 
