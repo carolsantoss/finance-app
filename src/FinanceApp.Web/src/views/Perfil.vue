@@ -34,6 +34,54 @@ const profileForm = ref({
     bio: ''
 });
 
+const formatPhone = (value: string) => {
+    const digits = (value || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.length <= 2) return `(${digits}`;
+    if (digits.length <= 7) return `(${digits.slice(0,2)})${digits.slice(2)}`;
+    if (digits.length <= 11) return `(${digits.slice(0,2)})${digits.slice(2,7)}-${digits.slice(7)}`;
+    return `(${digits.slice(0,2)})${digits.slice(2,7)}-${digits.slice(7,11)}`;
+};
+
+const unformatPhone = (value: string) => (value || '').replace(/\D/g, '');
+
+const phoneMasked = computed({
+    get() {
+        return profileForm.value.phone ? formatPhone(profileForm.value.phone) : '';
+    },
+    set(val: string) {
+        // (padrão celular BR com DDD)
+        profileForm.value.phone = unformatPhone(val).slice(0, 11);
+    }
+});
+
+const isPhoneKeyAllowed = (e: KeyboardEvent) => {
+    const allowedKeys = ['Backspace','Tab','ArrowLeft','ArrowRight','Delete','Home','End','Enter','Escape'];
+    if (allowedKeys.includes(e.key)) return true;
+    // permitir atalhos (Ctrl/Cmd + A/C/V/X)
+    if ((e.ctrlKey || e.metaKey) && ['a','c','v','x','A','C','V','X'].includes(e.key)) return true;
+    // permitir dígitos
+    if (/^[0-9]$/.test(e.key)) return true;
+    return false;
+};
+
+const onPhoneKeydown = (e: KeyboardEvent) => {
+    if (!isPhoneKeyAllowed(e)) {
+        e.preventDefault();
+    }
+};
+
+const onPhonePaste = (e: ClipboardEvent) => {
+    const pasted = e.clipboardData?.getData('text') || '';
+    const digits = pasted.replace(/\D/g, '');
+    if (!digits) {
+        e.preventDefault();
+        return;
+    }
+    e.preventDefault();
+    phoneMasked.value = (profileForm.value.phone + digits).slice(0, 11);
+};
+
 // Security Data
 const passwordForm = ref({
     currentPassword: '',
@@ -340,7 +388,17 @@ const togglePreference = (key: 'darkMode' | 'notifications') => {
                                 <label class="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1">
                                     <Phone class="w-3 h-3" /> Telefone
                                 </label>
-                                <input v-model="profileForm.phone" type="text" placeholder="(00) 00000-0000" class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all" />
+                                <input 
+                                    v-model="phoneMasked" 
+                                    type="text" 
+                                    placeholder="(00)00000-0000" 
+                                    maxlength="15" 
+                                    inputmode="numeric" 
+                                    autocomplete="tel"
+                                    @keydown="onPhoneKeydown"
+                                    @paste="onPhonePaste"
+                                    class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none transition-all" 
+                                />
                             </div>
 
                             <div class="col-span-1 md:col-span-2 space-y-2">
