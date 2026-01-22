@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
-import { User, Lock, Wallet, ShieldCheck, ArrowLeft } from 'lucide-vue-next';
+import { User, Lock, Wallet, ShieldCheck, ArrowLeft, Eye, EyeOff } from 'lucide-vue-next';
 
 const auth = useAuthStore();
 const email = ref('');
@@ -10,6 +10,8 @@ const code = ref('');
 const rememberMe = ref(false);
 const isLoading = ref(false);
 const step = ref<'login' | '2fa'>('login');
+
+const showPassword = ref(false);
 
 const handleSubmit = async () => {
     isLoading.value = true;
@@ -42,6 +44,10 @@ const cancel2FA = () => {
     step.value = 'login';
     code.value = '';
     password.value = '';
+};
+
+const toggleShowPassword = () => {
+    showPassword.value = !showPassword.value;
 };
 </script>
 
@@ -92,14 +98,22 @@ const cancel2FA = () => {
                         <div class="relative">
                             <input 
                                 v-model="password"
-                                type="password" 
-                                class="w-full bg-input border border-border rounded-lg pl-4 pr-10 py-3 text-sm text-text-primary focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all placeholder-text-tertiary"
+                                :type="showPassword ? 'text' : 'password'"
+                                class="w-full bg-input border border-border rounded-lg pl-4 pr-12 py-3 text-sm text-text-primary focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all placeholder-text-tertiary"
                                 placeholder="******"
                                 required
                             />
-                            <div class="absolute right-3 top-3 text-text-tertiary">
-                                <Lock class="w-4 h-4" />
-                            </div>
+                            <button
+                                type="button"
+                                @click="toggleShowPassword"
+                                class="absolute inset-y-0 right-3 flex items-center p-1 text-text-tertiary bg-transparent hover:text-text-primary hover:bg-transparent rounded"
+                                :aria-label="showPassword ? 'Ocultar senha' : 'Mostrar senha'"
+                                title="Alternar visibilidade da senha"
+                            >
+                                <!-- apenas o ícone de olho, removido o Lock -->
+                                <Eye v-if="!showPassword" class="w-5 h-5" />
+                                <EyeOff v-else class="w-5 h-5" />
+                            </button>
                         </div>
                     </div>
 
@@ -126,7 +140,7 @@ const cancel2FA = () => {
                             v-model="code"
                             type="text" 
                             inputmode="numeric"
-                            class="w-full bg-input border border-border rounded-lg px-4 py-3 text-center text-2xl font-mono tracking-widest text-text-primary focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all placeholder-text-tertiary"
+                            class="w-full bg-input border border-border rounded-lg px-4 py-3 text-center text-2xl font-mono tracking-widest text-text-primary focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-all placeholder-text-terciary"
                             placeholder="000 000"
                             required
                             maxlength="7"
