@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import api from '../api/axios';
 import { useToastStore } from '../stores/toast';
 import { useAuthStore } from '../stores/auth';
@@ -31,6 +31,74 @@ const form = ref({
     nr_valorObjetivo: 0,
     nr_valorAtual: 0,
     dt_prazo: ''
+});
+
+// refs para inputs
+const objetivoInput = ref<HTMLInputElement | null>(null);
+const atualInput = ref<HTMLInputElement | null>(null);
+
+// Helpers de formatação / parse
+const formatCurrency = (value: number) => {
+    if (value == null || isNaN(value)) return '0,00';
+    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const formatCurrencyWithPrefix = (value: number) => {
+    return 'R$ ' + formatCurrency(value);
+};
+
+// Recebe apenas dígitos e interpreta como centavos
+const parseDigitsToNumber = (digits: string) => {
+    if (!digits) return 0;
+    // remove zeros à esquerda
+    digits = digits.replace(/^0+/, '');
+    if (digits === '') return 0;
+    const cents = parseInt(digits, 10);
+    return cents / 100;
+};
+
+// Formata valor do input a partir do número em form
+const updateInputValueFromNumber = (el: HTMLInputElement | null, value: number) => {
+    if (!el) return;
+    const formatted = formatCurrencyWithPrefix(value);
+    el.value = formatted;
+    // coloca caret no final
+    try {
+        el.setSelectionRange(el.value.length, el.value.length);
+    } catch { /* ignore */ }
+};
+
+// Handler genérico de input (mantém form numeric e formata enquanto digita)
+const handleMaskedInput = (el: HTMLInputElement | null, formKey: 'nr_valorObjetivo' | 'nr_valorAtual') => {
+    if (!el) return;
+    // extrai apenas dígitos
+    const digits = el.value.replace(/\D/g, '');
+    const value = parseDigitsToNumber(digits);
+    form.value[formKey] = value;
+    // atualiza campo com formatação
+    const formatted = formatCurrencyWithPrefix(value);
+    el.value = formatted;
+    // caret no final
+    try {
+        el.setSelectionRange(el.value.length, el.value.length);
+    } catch { /* ignore */ }
+};
+
+// Handlers ligados ao template
+const onObjetivoInput = () => handleMaskedInput(objetivoInput.value, 'nr_valorObjetivo');
+const onAtualInput = () => handleMaskedInput(atualInput.value, 'nr_valorAtual');
+
+// Ao abrir/fechar modal sincroniza valores nos inputs
+watch(() => showModal.value, async (open) => {
+    if (open) {
+        await nextTick();
+        updateInputValueFromNumber(objetivoInput.value, form.value.nr_valorObjetivo || 0);
+        updateInputValueFromNumber(atualInput.value, form.value.nr_valorAtual || 0);
+    } else {
+        // limpa os campos (opcional)
+        if (objetivoInput.value) objetivoInput.value.value = '';
+        if (atualInput.value) atualInput.value.value = '';
+    }
 });
 
 const fetchGoals = async () => {
@@ -107,7 +175,7 @@ const deleteGoal = async (id: number) => {
 };
 
 const calculateProgress = (current: number, target: number) => {
-    if (target <= 0) return 0;
+    if (target <= 0) return '0';
     const p = (current / target) * 100;
     return Math.min(p, 100).toFixed(0);
 };
@@ -174,11 +242,11 @@ onMounted(fetchGoals);
                     <div class="flex justify-between items-end">
                         <div>
                             <p class="text-xs text-text-secondary">Guardado</p>
-                            <p class="text-xl font-bold text-success">R$ {{ goal.nr_valorAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</p>
+                            <p class="text-xl font-bold text-success">R$ {{ formatCurrency(goal.nr_valorAtual) }}</p>
                         </div>
                         <div class="text-right">
                              <p class="text-xs text-text-secondary">Meta</p>
-                             <p class="text-sm font-bold text-text-primary">R$ {{ goal.nr_valorObjetivo.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</p>
+                             <p class="text-sm font-bold text-text-primary">R$ {{ formatCurrency(goal.nr_valorObjetivo) }}</p>
                         </div>
                     </div>
 
@@ -214,11 +282,23 @@ onMounted(fetchGoals);
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
                             <label class="text-sm font-bold text-text-secondary">Valor Alvo (R$)</label>
-                            <input v-model="form.nr_valorObjetivo" type="number" step="0.01" class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:border-brand outline-none" />
+                            <input
+                                ref="objetivoInput"
+                                type="text"
+                                placeholder="R$ 0,00"
+                                class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:border-brand outline-none"
+                                @input="onObjetivoInput"
+                            />
                         </div>
-                         <div class="space-y-2">
+                        <div class="space-y-2">
                             <label class="text-sm font-bold text-text-secondary">Guardado (R$)</label>
-                            <input v-model="form.nr_valorAtual" type="number" step="0.01" class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:border-brand outline-none" />
+                            <input
+                                ref="atualInput"
+                                type="text"
+                                placeholder="R$ 0,00"
+                                class="w-full bg-input border border-border rounded-lg p-3 text-text-primary focus:border-brand outline-none"
+                                @input="onAtualInput"
+                            />
                         </div>
                     </div>
 
