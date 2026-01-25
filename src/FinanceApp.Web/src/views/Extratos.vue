@@ -38,17 +38,78 @@ onMounted(async () => {
 });
 
 const filteredTransactions = computed(() => {
-    return finance.transactions.filter(t => {
-        const d = new Date(t.data);
-        const matchMonth = d.getMonth() + 1 === filters.value.month;
-        const matchYear = d.getFullYear() === filters.value.year;
-        const matchType = filters.value.type === 'Todos' || t.tipo === filters.value.type;
-        const matchCategory = !filters.value.categoryId || t.id_categoria === filters.value.categoryId;
-        const matchWallet = !filters.value.walletId || t.id_wallet === filters.value.walletId;
-        const matchCreditCard = !filters.value.creditCardId || t.id_credit_card === filters.value.creditCardId;
+    const { month, year, type, categoryId, walletId, creditCardId } = filters.value;
+    const result: any[] = [];
+
+    finance.transactions.forEach(t => {
+        // Base filters that don't depend on date (Optimization)
+        if (type !== 'Todos' && t.tipo !== type) return;
+        if (categoryId && t.id_categoria !== categoryId) return;
+        if (walletId && t.id_wallet !== walletId) return;
+        if (creditCardId && t.id_credit_card !== creditCardId) return;
+
+        // Installment Logic
+        const isInstallment = t.parcelas > 1 && t.formaPagamento === 'Crédito'; // Assuming only Credit has installments
+        const startParcel = t.parcelaInicial || 1;
+        const totalParcels = t.parcelas || 1;
         
-        return matchMonth && matchYear && matchType && matchCategory && matchWallet && matchCreditCard;
+        // If it's an installment, we check if any parcel falls in the current view
+        if (isInstallment) {
+            const startDate = new Date(t.data);
+            const installmentValue = t.valor / totalParcels;
+
+            // We need to find if the CURRENT view month/year corresponds to one of the parcels.
+            // Calculate the month difference between View Month and Start Date
+            // ViewDate (1st of month)
+            const viewDate = new Date(year, month - 1, 1);
+            
+            // To handle days, let's strictly compare Month/Year indices.
+            // Index = Year * 12 + Month
+            const viewIndex = year * 12 + (month - 1);
+            const startIndex = startDate.getFullYear() * 12 + startDate.getMonth();
+            
+            // The offset from start: 0 means same month, 1 means next month...
+            const diffMonths = viewIndex - startIndex;
+
+            // If diffMonths is negative, the view is BEFORE the purchase -> Don't show (unless backdated? assuming start date matches parcel 1 implicitly)
+            // If diffMonths >= 0.
+            // The parcel number corresponding to this month is: startParcel + diffMonths.
+            
+            const currentParcel = startParcel + diffMonths;
+
+            if (currentParcel >= startParcel && currentParcel <= totalParcels) {
+                // Determine the exact date for this installment in this month
+                // Ideally keep the same Day of month, or clamp to last day.
+                // But for display in "Extratos", usually just visual "Data" is fine.
+                // Let's project the date to the current view month.
+                // Only issue: If original was Jan 31, and current is Feb. Feb 28?
+                // Simple approach: Set date to same day, or max day of month.
+                const projectedDate = new Date(year, month - 1, Math.min(startDate.getDate(), new Date(year, month, 0).getDate()));
+
+                result.push({
+                    ...t,
+                    id: t.id_lancamento, // Ensure ID is preserved for deletion
+                    // Virtual overrides
+                    data: projectedDate.toISOString(),
+                    valor: installmentValue,
+                    parcelaAtual: currentParcel,
+                    isVirtual: true // Marker if needed
+                });
+            }
+
+        } else {
+            // Standard Transaction
+            const d = new Date(t.data);
+            if (d.getMonth() + 1 === month && d.getFullYear() === year) {
+                 result.push({
+                     ...t,
+                     id: t.id_lancamento
+                 });
+            }
+        }
     });
+
+    return result.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 });
 
 const totalEntradas = computed(() => filteredTransactions.value.filter(t => t.tipo === 'Entrada').reduce((acc, t) => acc + t.valor, 0));
@@ -187,8 +248,11 @@ const handleDelete = async (id: number) => {
                             {{ formatCurrency(item.valor) }}
                         </td>
                          <td class="px-6 py-4 text-center text-text-tertiary">
-                            <span v-if="item.formaPagamento === 'Crédito'">
-                                {{ item.parcelas }}x
+                            <span v-if="item.formaPagamento === 'Crédito' && item.parcelas > 1">
+                                {{ item.parcelaAtual || 1 }}/{{ item.parcelas }}
+                            </span>
+                            <span v-else-if="item.formaPagamento === 'Crédito'"> 
+                                à vista
                             </span>
                             <span v-else>-</span>
                         </td>
