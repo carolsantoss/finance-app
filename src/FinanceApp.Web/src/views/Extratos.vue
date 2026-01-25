@@ -22,7 +22,8 @@ const filters = ref({
     year: currentYear,
     type: 'Todos',
     categoryId: null as number | null,
-    walletId: null as number | null
+    walletId: null as number | null,
+    creditCardId: null as number | null // Added creditCardId
 });
 
 const isProcessing = ref(false);
@@ -42,10 +43,11 @@ const filteredTransactions = computed(() => {
         const matchMonth = d.getMonth() + 1 === filters.value.month;
         const matchYear = d.getFullYear() === filters.value.year;
         const matchType = filters.value.type === 'Todos' || t.tipo === filters.value.type;
-        const matchCategory = !filters.value.categoryId || t.categoryId === filters.value.categoryId;
-        const matchWallet = !filters.value.walletId || t.walletId === filters.value.walletId;
+        const matchCategory = !filters.value.categoryId || t.id_categoria === filters.value.categoryId;
+        const matchWallet = !filters.value.walletId || t.id_wallet === filters.value.walletId;
+        const matchCreditCard = !filters.value.creditCardId || t.id_credit_card === filters.value.creditCardId;
         
-        return matchMonth && matchYear && matchType && matchCategory && matchWallet;
+        return matchMonth && matchYear && matchType && matchCategory && matchWallet && matchCreditCard;
     });
 });
 
@@ -128,11 +130,18 @@ const handleDelete = async (id: number) => {
                     <option v-for="cat in categoryStore.categories" :key="cat.id_categoria" :value="cat.id_categoria">{{ cat.nm_nome }}</option>
                 </select>
             </div>
-             <div class="flex-1 min-w-[200px] space-y-1">
+            <div class="flex-1 min-w-[200px] space-y-1">
                 <label class="text-xs text-text-secondary">Carteira</label>
                 <select v-model="filters.walletId" class="w-full bg-input border border-border rounded px-3 py-2 text-text-primary focus:border-brand outline-none">
                     <option :value="null">Todas</option>
                     <option v-for="w in walletStore.wallets" :key="w.id_wallet" :value="w.id_wallet">{{ w.nm_nome }}</option>
+                </select>
+            </div>
+             <div class="flex-1 min-w-[200px] space-y-1">
+                <label class="text-xs text-text-secondary">Cartão de Crédito</label>
+                <select v-model="filters.creditCardId" class="w-full bg-input border border-border rounded px-3 py-2 text-text-primary focus:border-brand outline-none">
+                    <option :value="null">Todos</option>
+                    <option v-for="c in walletStore.creditCards" :key="c.id_credit_card" :value="c.id_credit_card">{{ c.nm_nome }}</option>
                 </select>
             </div>
 
