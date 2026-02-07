@@ -11,6 +11,7 @@ RestartSec=10
 KillSignal=SIGINT
 SyslogIdentifier=finance-api
 User=root
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5001
 # Nota: Rodando como root para evitar problemas de permissão na pasta /app criada pelo Jenkins
 # O ideal seria usar o usuario jenkins ou www-data e dar permissão na pasta
 # Environment=ASPNETCORE_ENVIRONMENT=Production
